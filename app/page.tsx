@@ -32,8 +32,8 @@ type Beat = {
   tag?: string;
 };
 
-const sprites: Record<SpriteKey, { src: string; name: string }> = {
-  linNatural: { src: '/characters/lin-natural.png', name: 'Lin' },
+const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolean }> = {
+  linNatural: { src: '/characters/lin-natural-front-sheet.png', name: 'Lin', frontCrop: true },
   linDragon: { src: '/characters/lin-dragon.png', name: 'Lin — Night Orchid look' },
   linPorcelain: { src: '/characters/lin-porcelain.png', name: 'Lin — Porcelain Light look' },
   linGraduation: { src: '/characters/lin-graduation.png', name: 'Lin at graduation' },
@@ -289,7 +289,7 @@ function ProfileScreen({ language, fame, pressure, onConfirm }: { language: Lang
       <div className="screen-card profile-card">
         <div className="card-label">PLAYER PROFILE · 001</div>
         <div className="profile-layout">
-          <div className="profile-portrait"><img src={sprites.linNatural.src} alt={sprites.linNatural.name} /></div>
+          <div className="profile-portrait"><NaturalFront className="profile-natural" /></div>
           <div className="profile-data">
             <p>LIN / 林</p><h2>ACTOR</h2>
             <dl><div><dt>LOOK</dt><dd>NATURAL</dd></div><div><dt>TRAINING</dt><dd>FORMAL ACTING</dd></div><div><dt>STATUS</dt><dd>UNCAST</dd></div><div><dt>FAME / PRESSURE</dt><dd>{fame} / {pressure}</dd></div></dl>
@@ -317,11 +317,13 @@ function DialogueScene({ beat, language, index, total, choiceReady, choiceNotice
       {beat.choice ? (
         <ChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
       ) : (
-        <button className="dialogue-box" onClick={onAdvance} aria-label="Continue dialogue">
+        <div className="dialogue-shell">
           <span className="speaker-tag">{language === 'en' ? beat.speakerEn : beat.speakerZh}</span>
-          <span className="dialogue-text">{language === 'en' ? beat.en : beat.zh}</span>
-          <span className="dialogue-next"><ChevronRight /></span>
-        </button>
+          <button className="dialogue-box" onClick={onAdvance} aria-label="Continue dialogue">
+            <span className="dialogue-text">{language === 'en' ? beat.en : beat.zh}</span>
+            <span className="dialogue-next"><ChevronRight /></span>
+          </button>
+        </div>
       )}
     </section>
   );
@@ -356,7 +358,7 @@ function TrainingScreen({ language, done, setDone, soundOn, onContinue }: { lang
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small></button>)}
       </div>
-      <div className="training-character"><img src={sprites.linNatural.src} alt={sprites.linNatural.name} /></div>
+      <NaturalFront className="training-character" />
       <Button className="continue-button" disabled={done.length !== 3} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO CALLBACK' : '进入回调'} <ChevronRight /></Button>
     </section>
   );
@@ -380,7 +382,17 @@ function EndingScreen({ language, fame, pressure, onRestart }: { language: Langu
 }
 
 function Sprite({ sprite, position }: { sprite: SpriteKey; position: string }) {
-  return <img className={`character-sprite ${position}`} src={sprites[sprite].src} alt={sprites[sprite].name} />;
+  const data = sprites[sprite];
+  if (data.frontCrop) return <NaturalFront className={`character-sprite ${position}`} />;
+  return <img className={`character-sprite ${position}`} src={data.src} alt={data.name} />;
+}
+
+function NaturalFront({ className }: { className: string }) {
+  return (
+    <div className={`lin-natural-front ${className}`} role="img" aria-label={sprites.linNatural.name}>
+      <img src={sprites.linNatural.src} alt="" aria-hidden="true" />
+    </div>
+  );
 }
 
 function ProjectCards() {
