@@ -12,8 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 
 type Language = 'en' | 'zh';
-type Screen = 'title' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
+type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
 type SpriteKey = 'linNatural' | 'linDragon' | 'linPorcelain' | 'linGraduation' | 'richard' | 'david' | 'maya';
+type AvatarKey = 'original' | 'sleek' | 'bob' | 'pony';
 
 type Choice = { id: string; en: string; zh: string; preset?: boolean };
 type ChoiceSet = { id: string; items: Choice[]; fame: number; pressure: number; result: string };
@@ -40,6 +41,13 @@ const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolea
   richard: { src: '/characters/richard.png', name: 'Richard Cole' },
   david: { src: '/characters/david.png', name: 'David Miller' },
   maya: { src: '/characters/maya.png', name: 'Maya Park' },
+};
+
+const avatarOptions: Record<AvatarKey, { src: string; hairEn: string; hairZh: string; faceEn: string; faceZh: string }> = {
+  original: { src: '/avatars/lin-original.png', hairEn: 'LONG WAVES', hairZh: '长卷发', faceEn: 'SOFT', faceZh: '柔和' },
+  sleek: { src: '/avatars/lin-sleek.png', hairEn: 'SLEEK', hairZh: '长直发', faceEn: 'SHARP', faceZh: '利落' },
+  bob: { src: '/avatars/lin-bob.png', hairEn: 'BOB', hairZh: '短波波头', faceEn: 'GENTLE', faceZh: '温和' },
+  pony: { src: '/avatars/lin-pony.png', hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
 };
 
 const choice01: ChoiceSet = {
@@ -148,7 +156,7 @@ const redCarpet: Beat[] = [
 const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, redCarpet };
 const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'training', callback: 'locked', locked: 'redCarpet', redCarpet: 'ending' };
 const stageInfo: Record<Screen, { index: string; label: string }> = {
-  title: { index: '00', label: 'CASTING ME' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
+  title: { index: '00', label: 'CASTING ME' }, creator: { index: '00', label: 'FACE CASTING' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
   firstRead: { index: '01', label: 'FIRST READ' }, lookTest: { index: '02', label: 'LOOK TEST' }, training: { index: '02.5', label: 'TRAINING' },
   callback: { index: '03', label: 'CALLBACK' }, locked: { index: '04', label: 'LOCKED' }, redCarpet: { index: '05', label: 'RED CARPET' }, ending: { index: 'END', label: 'LOOK PRESET SAVED' },
 };
@@ -180,6 +188,7 @@ export default function Home() {
   const [resolved, setResolved] = useState<string[]>([]);
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
+  const [avatar, setAvatar] = useState<AvatarKey>('original');
 
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
@@ -197,8 +206,17 @@ export default function Home() {
     ping(soundOn, 760);
   }, [beatIndex, beat?.flash, soundOn]);
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('casting-me-avatar');
+      if (saved && saved in avatarOptions) setAvatar(saved as AvatarKey);
+    } catch {
+      // Storage can be unavailable in strict private browsing; the in-session choice still works.
+    }
+  }, []);
+
   const progress = useMemo(() => {
-    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'training', 'callback', 'locked', 'redCarpet', 'ending'];
+    const order: Screen[] = ['creator', 'prologue', 'profile', 'firstRead', 'lookTest', 'training', 'callback', 'locked', 'redCarpet', 'ending'];
     return Math.max(0, Math.round(((order.indexOf(screen) + 1) / order.length) * 100));
   }, [screen]);
 
@@ -236,15 +254,21 @@ export default function Home() {
     setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice('');
   };
 
+  const confirmAvatar = () => {
+    try { window.localStorage.setItem('casting-me-avatar', avatar); } catch { /* Keep the in-session selection. */ }
+    moveTo('prologue');
+  };
+
   return (
     <main className={`vn-app scene-${screen}`}>
       <GameTopbar screen={screen} progress={progress} language={language} setLanguage={setLanguage} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
-      {screen === 'title' && <TitleScreen language={language} onStart={() => moveTo('prologue')} />}
-      {screen === 'profile' && <ProfileScreen language={language} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={() => moveTo('callback')} />}
-      {screen === 'ending' && <EndingScreen language={language} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} index={beatIndex} total={beats?.length ?? 1} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('creator')} />}
+      {screen === 'creator' && <AvatarCreator language={language} avatar={avatar} setAvatar={setAvatar} soundOn={soundOn} onConfirm={confirmAvatar} />}
+      {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={() => moveTo('callback')} />}
+      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onRestart={restart} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} index={beatIndex} total={beats?.length ?? 1} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -264,13 +288,13 @@ function GameTopbar({ screen, progress, language, setLanguage, fame, pressure, s
   );
 }
 
-function TitleScreen({ language, onStart }: { language: Language; onStart: () => void }) {
+function TitleScreen({ language, avatar, onStart }: { language: Language; avatar: AvatarKey; onStart: () => void }) {
   return (
     <section className="title-screen">
       <div className="title-rays" aria-hidden="true" />
-      <Sprite sprite="richard" position="left title-left" />
-      <Sprite sprite="linNatural" position="center title-center" />
-      <Sprite sprite="maya" position="right title-right" />
+      <Sprite sprite="richard" avatar={avatar} position="left title-left" />
+      <Sprite sprite="linNatural" avatar={avatar} position="center title-center" />
+      <Sprite sprite="maya" avatar={avatar} position="right title-right" />
       <div className="title-copy">
         <p>2D SPRITE DIALOGUE · LIGHT CAREER SIM</p>
         <h1>CASTING<br /><span>ME</span></h1>
@@ -283,13 +307,50 @@ function TitleScreen({ language, onStart }: { language: Language; onStart: () =>
   );
 }
 
-function ProfileScreen({ language, fame, pressure, onConfirm }: { language: Language; fame: number; pressure: number; onConfirm: () => void }) {
+function AvatarCreator({ language, avatar, setAvatar, soundOn, onConfirm }: { language: Language; avatar: AvatarKey; setAvatar: (value: AvatarKey) => void; soundOn: boolean; onConfirm: () => void }) {
+  const current = avatarOptions[avatar];
+  return (
+    <section className="creator-screen stage-screen">
+      <div className="creator-card">
+        <div className="creator-preview">
+          <span>PLAYER MODEL · LIVE PREVIEW</span>
+          <AvatarArt avatar={avatar} className="creator-avatar" />
+          <div className="creator-readout">
+            <b>{language === 'en' ? current.hairEn : current.hairZh}</b>
+            <i>{language === 'en' ? current.faceEn : current.faceZh}</i>
+          </div>
+        </div>
+        <div className="creator-controls">
+          <p>FACE CASTING · LIN_001</p>
+          <h2>{language === 'en' ? 'MAKE YOUR LIN' : '塑造你的林'}</h2>
+          <div className="creator-rule"><span>{language === 'en' ? 'LOCKED' : '固定'}</span><b>{language === 'en' ? 'LIGHT SKIN · BLACK DRESS · BODY' : '浅肤色 · 黑色礼服 · 身体'}</b></div>
+          <h3>{language === 'en' ? 'HAIR + FACIAL FEATURES' : '头发 + 面部特征'}</h3>
+          <div className="avatar-options">
+            {(Object.keys(avatarOptions) as AvatarKey[]).map((key, index) => {
+              const option = avatarOptions[key];
+              return (
+                <button key={key} className={avatar === key ? 'selected' : ''} onClick={() => { ping(soundOn, 560 + index * 55); setAvatar(key); }} aria-pressed={avatar === key}>
+                  <AvatarArt avatar={key} className="avatar-thumb" />
+                  <span><b>{language === 'en' ? option.hairEn : option.hairZh}</b><small>{language === 'en' ? option.faceEn : option.faceZh}</small></span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="creator-note">{language === 'en' ? 'Your selected face and hair stay with Lin throughout the game and on your next visit.' : '确认后，林会在整段游戏和下次打开时持续使用这一形象。'}</p>
+          <Button className="confirm-avatar-button" onClick={onConfirm}>{language === 'en' ? 'LOCK THIS LOOK' : '确认这个形象'} <ChevronRight /></Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onConfirm: () => void }) {
   return (
     <section className="profile-screen stage-screen">
       <div className="screen-card profile-card">
         <div className="card-label">PLAYER PROFILE · 001</div>
         <div className="profile-layout">
-          <div className="profile-portrait"><NaturalFront className="profile-natural" /></div>
+          <div className="profile-portrait"><AvatarArt avatar={avatar} className="profile-natural" /></div>
           <div className="profile-data">
             <p>LIN / 林</p><h2>ACTOR</h2>
             <dl><div><dt>LOOK</dt><dd>NATURAL</dd></div><div><dt>TRAINING</dt><dd>FORMAL ACTING</dd></div><div><dt>STATUS</dt><dd>UNCAST</dd></div><div><dt>FAME / PRESSURE</dt><dd>{fame} / {pressure}</dd></div></dl>
@@ -302,14 +363,14 @@ function ProfileScreen({ language, fame, pressure, onConfirm }: { language: Lang
   );
 }
 
-function DialogueScene({ beat, language, index, total, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; index: number; total: number; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, index, total, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const sceneClass = beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
   return (
     <section className={`dialogue-scene ${sceneClass}`}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {beat.left && <Sprite sprite={beat.left} position="left" />}
-      {beat.center && <Sprite sprite={beat.center} position="center" />}
-      {beat.right && <Sprite sprite={beat.right} position="right" />}
+      {beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
+      {beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
+      {beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
       {beat.showProjects && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -345,7 +406,7 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
   );
 }
 
-function TrainingScreen({ language, done, setDone, soundOn, onContinue }: { language: Language; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
+function TrainingScreen({ language, avatar, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
     { id: 'acting', label: 'ACTING', zh: '表演', result: 'DEPTH REGISTERED', detailEn: 'Suspicion · Protection · Revenge', detailZh: '怀疑 · 保护 · 报复' },
     { id: 'martial', label: 'MARTIAL ARTS', zh: '武术', result: 'TAG: COMBAT-READY', detailEn: 'Fatigue not registered', detailZh: '疲惫未被登记' },
@@ -358,18 +419,18 @@ function TrainingScreen({ language, done, setDone, soundOn, onContinue }: { lang
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small></button>)}
       </div>
-      <NaturalFront className="training-character" />
+      <AvatarArt avatar={avatar} className="training-character" />
       <Button className="continue-button" disabled={done.length !== 3} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO CALLBACK' : '进入回调'} <ChevronRight /></Button>
     </section>
   );
 }
 
-function EndingScreen({ language, fame, pressure, onRestart }: { language: Language; fame: number; pressure: number; onRestart: () => void }) {
+function EndingScreen({ language, avatar, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onRestart: () => void }) {
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" position="center ending-lin" />
-      <Sprite sprite="maya" position="right ending-maya" />
+      <Sprite sprite="linDragon" avatar={avatar} position="center ending-lin" />
+      <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now I know how to pitch you.”</div>
       <div className="ending-card">
         <span>LOOK PRESET SAVED</span><h2>NIGHT ORCHID</h2><p>DRAGON LADY · SAME EYES · SAME HAIR · SAME RESTRAINT</p>
@@ -381,18 +442,15 @@ function EndingScreen({ language, fame, pressure, onRestart }: { language: Langu
   );
 }
 
-function Sprite({ sprite, position }: { sprite: SpriteKey; position: string }) {
+function Sprite({ sprite, avatar, position }: { sprite: SpriteKey; avatar: AvatarKey; position: string }) {
   const data = sprites[sprite];
-  if (data.frontCrop) return <NaturalFront className={`character-sprite ${position}`} />;
+  if (sprite.startsWith('lin')) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
   return <img className={`character-sprite ${position}`} src={data.src} alt={data.name} />;
 }
 
-function NaturalFront({ className }: { className: string }) {
-  return (
-    <div className={`lin-natural-front ${className}`} role="img" aria-label={sprites.linNatural.name}>
-      <img src={sprites.linNatural.src} alt="" aria-hidden="true" />
-    </div>
-  );
+function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string }) {
+  const option = avatarOptions[avatar];
+  return <img className={className} src={option.src} alt={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
 }
 
 function ProjectCards() {
