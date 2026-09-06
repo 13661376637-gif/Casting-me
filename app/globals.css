@@ -538,40 +538,40 @@ button { font: inherit; }
   .ending-echo { top:14%;width:90%;text-align:center; }
 }
 
-/* Dialogue portrait framing: closer two-shots, cropped at the waist. */
+/* Dialogue portrait framing: reference-style two-shot, with the box across both waists. */
 .dialogue-scene > .character-sprite {
-  height:min(118vh,1280px);
-  bottom:-55vh;
+  height:min(106vh,1160px);
+  bottom:-30vh;
 }
-.dialogue-scene > .character-sprite.left { left:clamp(120px,19vw,380px); }
-.dialogue-scene > .character-sprite.right { right:clamp(120px,19vw,380px); }
+.dialogue-scene > .character-sprite.left { left:clamp(70px,14vw,270px); }
+.dialogue-scene > .character-sprite.right { right:clamp(70px,14vw,270px); }
 .dialogue-scene > .character-sprite.center {
-  height:min(124vh,1340px);
-  bottom:-58vh;
+  height:min(112vh,1220px);
+  bottom:-32vh;
 }
 
 @media (max-width: 900px) {
   .dialogue-scene > .character-sprite {
-    height:min(108vh,980px);
-    bottom:-48vh;
+    height:min(98vh,900px);
+    bottom:-26vh;
   }
-  .dialogue-scene > .character-sprite.left { left:12vw; }
-  .dialogue-scene > .character-sprite.right { right:12vw; }
+  .dialogue-scene > .character-sprite.left { left:7vw; }
+  .dialogue-scene > .character-sprite.right { right:7vw; }
   .dialogue-scene > .character-sprite.center {
-    height:min(114vh,1020px);
-    bottom:-52vh;
+    height:min(103vh,940px);
+    bottom:-28vh;
   }
 }
 
 @media (max-width: 640px) {
   .dialogue-scene > .character-sprite {
-    height:95vh;
-    bottom:-44vh;
+    height:82vh;
+    bottom:-18vh;
   }
-  .dialogue-scene > .character-sprite.left { left:4vw; }
-  .dialogue-scene > .character-sprite.right { right:-34vw; }
+  .dialogue-scene > .character-sprite.left { left:-5vw; }
+  .dialogue-scene > .character-sprite.right { right:-22vw; }
   .dialogue-scene > .character-sprite.center {
-    height:100vh;
-    bottom:-47vh;
+    height:88vh;
+    bottom:-20vh;
   }
 }
