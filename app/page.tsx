@@ -17,7 +17,7 @@ type SpriteKey = 'linNatural' | 'linDragon' | 'linPorcelain' | 'linGraduation' |
 type AvatarKey = 'original' | 'sleek' | 'bob' | 'pony';
 
 type Choice = { id: string; en: string; zh: string; preset?: boolean };
-type ChoiceSet = { id: string; items: Choice[]; fame: number; pressure: number; result: string };
+type ChoiceSet = { id: string; items: Choice[]; fame: number; pressure: number; resultEn: string; resultZh: string };
 type Beat = {
   speakerEn: string;
   speakerZh: string;
@@ -51,114 +51,160 @@ const avatarOptions: Record<AvatarKey, { src: string; hairEn: string; hairZh: st
 };
 
 const choice01: ChoiceSet = {
-  id: 'choice-01', fame: 1, pressure: 1, result: 'CASTING NOTE ADDED: CONTROLLED / UNREADABLE',
+  id: 'choice-01', fame: -1, pressure: 2, resultEn: 'AUDITION RESULT: NOT ALIGNED · FAME -1 · PRESSURE +2', resultZh: '试镜结果：不匹配 · FAME -1 · PRESSURE +2',
   items: [
-    { id: 'a', en: "People don't come with headlines.", zh: '人物没有标题。' },
-    { id: 'b', en: "Let's go again. I'll give you the headline first.", zh: '再来一次。我先给你标题。', preset: true },
-    { id: 'c', en: "I want to know why she's afraid first.", zh: '我想先知道她为什么害怕。' },
+    { id: 'a', en: 'Remove the hesitation and play her as certain.', zh: '删掉迟疑，把她演得绝对确定。' },
+    { id: 'b', en: 'She is not a pitch. She is a person.', zh: '她不是一个卖点，她是一个人。', preset: true },
+    { id: 'c', en: 'Ask for another read and keep one final second of doubt.', zh: '请求再读一次，保留最后一秒的迟疑。' },
   ],
 };
 
 const choice02: ChoiceSet = {
-  id: 'choice-02', fame: 3, pressure: 2, result: 'MARKET RESPONSE: CLEAR',
+  id: 'choice-02', fame: 2, pressure: 2, resultEn: 'AGENT SIGNED: CLAIRE BENNETT · FAME +2 · PRESSURE +2', resultZh: '签约完成：CLAIRE BENNETT · FAME +2 · PRESSURE +2',
   items: [
-    { id: 'a', en: 'Neither one is me.', zh: '两种都不是我。' },
-    { id: 'b', en: "I can play both. Let's shoot.", zh: '两种我都能演。先拍吧。', preset: true },
-    { id: 'c', en: 'Keep the natural look only.', zh: '只保留自然造型。' },
-  ],
-};
-
-const choice03: ChoiceSet = {
-  id: 'choice-03', fame: 5, pressure: 0, result: 'ROLE LOCKED: NIGHT ORCHID',
-  items: [
-    { id: 'a', en: 'I want to wait for the reporter.', zh: '我要等记者那个角色。' },
-    { id: 'b', en: 'Which one tests better?', zh: '哪一套数据更好？', preset: true },
-    { id: 'c', en: 'Pass on both.', zh: '两部都拒绝。' },
+    { id: 'a', en: 'Choose David: move slower and protect role width.', zh: '选择 David：慢一些，保留角色宽度。' },
+    { id: 'b', en: 'Choose Claire: enter mainstream projects faster.', zh: '选择 Claire：更快进入主流项目。', preset: true },
   ],
 };
 
 const choice04: ChoiceSet = {
-  id: 'choice-04', fame: 0, pressure: 2, result: 'LOOK PRESET LOADED',
+  id: 'choice-04', fame: 0, pressure: 1, resultEn: 'DIRECTOR FAVOR +1 · PRESSURE +1', resultZh: '导演好感 +1 · PRESSURE +1',
   items: [
-    { id: 'a', en: 'Send me the full script.', zh: '把完整剧本发给我。' },
-    { id: 'b', en: 'Send me the last look.', zh: '把上一版造型发给我。', preset: true },
-    { id: 'c', en: 'Ask them to audition me again.', zh: '请他们重新试镜我。' },
+    { id: 'a', en: 'Order seasonal noodles and hot tea as usual.', zh: '按自己的习惯点时蔬面与热茶。' },
+    { id: 'b', en: 'Match Richard: steak, arugula salad, and pinot noir.', zh: '跟随 Richard：牛排、芝麻菜沙拉与黑皮诺。', preset: true },
+    { id: 'c', en: 'Choose the same entrée, but replace the wine with sparkling water.', zh: '选择相同主菜，但把酒换成气泡水。' },
+  ],
+};
+
+const choice05: ChoiceSet = {
+  id: 'choice-05', fame: 3, pressure: 2, resultEn: 'COVER RESPONSE ×2.4 · MOVIE OFFER UNLOCKED', resultZh: '封面反馈 ×2.4 · 电影邀约已解锁',
+  items: [
+    { id: 'a', en: 'Keep the modern Chinese look and change only the expression.', zh: '保留中式典雅造型，只调整表情。' },
+    { id: 'b', en: 'Request a third look without a cultural tag.', zh: '要求尝试第三套不带文化标签的造型。' },
+    { id: 'c', en: 'Accept the high-recognition red-and-black look.', zh: '接受红黑高领的高识别度造型。', preset: true },
+  ],
+};
+
+const choice06: ChoiceSet = {
+  id: 'choice-06', fame: 2, pressure: 1, resultEn: 'SCRIPT LOCKED: NIGHT ORCHID · DRAGON LADY', resultZh: '剧本锁定：《夜兰》· DRAGON LADY',
+  items: [
+    { id: 'a', en: 'Night Orchid: Dragon Lady commercial action film.', zh: '《夜兰》：Dragon Lady 商业动作片。', preset: true },
+    { id: 'b', en: 'White Season: White Lotus commercial romance.', zh: '《白色花季》：White Lotus 商业爱情片。' },
+    { id: 'c', en: 'Small Weather: original independent drama.', zh: '《小城天气》：独立小剧组原创剧情片。' },
   ],
 };
 
 const prologue: Beat[] = [
-  { speakerEn: 'IDENTITY', speakerZh: '身份', en: 'She trained for four years, learning how to become different people.', zh: '她学习了四年，练习如何成为不同的人。', center: 'linNatural', tag: 'PANEL 01 / ACTING SCHOOL' },
-  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'After graduation, she began looking for the first real door into the industry.', zh: '毕业以后，她开始寻找真正进入行业的第一扇门。', center: 'linGraduation', tag: 'PANEL 02 / CLASS OF 2026' },
+  { speakerEn: 'ACTING SCHOOL', speakerZh: '表演学校', en: 'She spent four years learning how to understand different people.', zh: '她用四年学习如何理解不同的人。', center: 'linNatural', tag: 'PANEL 01 / ACTING SCHOOL' },
+  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'She believed the work would eventually speak for itself.', zh: '她相信，演技最终会说话。', center: 'linGraduation', tag: 'PANEL 02 / CLASS OF 2026' },
   { speakerEn: 'HOLLYWOOD', speakerZh: '好莱坞', en: 'New roles are created here every day—and familiar faces are searched for again and again.', zh: '这里每天都产生新角色，也反复寻找熟悉的面孔。', center: 'linNatural', tag: 'PANEL 03 / LOS ANGELES' },
-  { speakerEn: 'FIRST CALL', speakerZh: '第一次机会', en: 'She thought the next step was proving that she could act.', zh: '她以为下一步是证明自己会演戏。', center: 'linNatural', tag: 'AUDITION ROOM A-17' },
+  { speakerEn: 'FIRST CALL', speakerZh: '第一次机会', en: 'She thought the first step into the industry was proving she could play a complete person.', zh: '她以为进入行业的第一步，是证明自己能演一个完整的人。', center: 'linNatural', tag: '“I WANT TO PLAY A PERSON, NOT A CATEGORY.”' },
 ];
 
 const firstRead: Beat[] = [
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Page three. Start after the door closes. Don't look at me—just beside the lens.", zh: '第三页。门关上以后开始。不要看我，看镜头旁边。', left: 'linNatural', right: 'richard' },
-  { speakerEn: 'LIN', speakerZh: '林', en: "You said I was safe here. Don't make me regret believing you.", zh: '你说这里很安全。别让我后悔相信你。', left: 'linNatural', right: 'richard' },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "The acting is good, but the audience will ask who she is before they decide whether to hear what she's afraid of.", zh: '表演是好的，但观众会先问她是谁，再决定要不要听她害怕什么。', left: 'linNatural', right: 'richard' },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'What do you want them to know first?', zh: '你希望他们先知道什么？', left: 'linNatural', right: 'richard' },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Control. Mystery. No apology. Give me the headline first; we can add the details later.', zh: '控制感。神秘。没有道歉。先给我标题，细节以后再补。', left: 'linNatural', right: 'richard' },
-  { speakerEn: 'DAVID · QUIETLY', speakerZh: '大卫 · 低声', en: 'Let them remember you in ten seconds.', zh: '先让他们在十秒里记住你。', left: 'linNatural', right: 'david' },
-  { speakerEn: 'CHOICE 01', speakerZh: '选择 01', en: 'How will you respond?', zh: '你要如何回应？', left: 'linNatural', right: 'david', choice: choice01 },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'You said I was safe here. Prove it.', zh: '你说这里很安全。证明给我看。', left: 'linDragon', right: 'richard' },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "That's it. Now I know how to pitch you.", zh: '就是这个。现在我知道怎么介绍你了。', left: 'linDragon', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Page three. Don't give me her past yet. Give me the first impression.", zh: '第三页。先不要给我她的过去，只给我第一印象。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Her mentor betrayed her. She is angry, but part of her still doubts herself.', zh: '她被导师背叛了。她很愤怒，但仍有一部分在怀疑自己。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Doubt slows the read. I need calm, dangerous, no explanation.', zh: '怀疑会拖慢理解。我需要冷静、危险，不解释。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Then why do you need the scene?', zh: '那你为什么还需要这场戏？', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Because the audience decides what she is before they know her.', zh: '因为观众在了解她以前，就会先决定她是什么。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'CHOICE 01', speakerZh: '选择 01', en: 'Respond to the direction.', zh: '回应导演的调整。', left: 'linNatural', right: 'richard', choice: choice01 },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'If I remove the contradiction, she becomes a pose.', zh: '如果删掉她的矛盾，她就只剩一个姿势。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Understood. Then we're not looking for the same kind of collaboration.", zh: '我明白。那我们寻找的不是同一种合作。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'REJECTION 01', speakerZh: '落选 01', en: '“Strong work, unclear positioning.”', zh: '“表演扎实，但定位不清晰。”', center: 'linNatural', tag: 'REJECTION STACK · RENT DUE' },
+  { speakerEn: 'REJECTION 02', speakerZh: '落选 02', en: '“Missing an instantly recognizable edge.”', zh: '“缺少立即可识别的锋利感。”', center: 'linNatural', tag: 'REJECTION STACK · RENT DUE' },
+  { speakerEn: 'REJECTION 03', speakerZh: '落选 03', en: '“Moving forward with an actor closer to the project’s direction.”', zh: '“决定采用更符合项目方向的演员。”', center: 'linNatural', tag: 'REJECTION STACK · RENT DUE' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Every message says the work was good.', zh: '每封信都说我演得不错。', center: 'linNatural', tag: 'FAME -1 · PRESSURE 2' },
+  { speakerEn: 'LIN · AFTER A PAUSE', speakerZh: '林 · 停顿', en: 'None of them needs me.', zh: '没有一封信需要我。', center: 'linNatural', tag: 'CHOICE WIDTH · HIDDEN' },
 ];
 
 const lookTest: Beat[] = [
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Same scene, two posters. We only need to know which promise reads faster.', zh: '同一场戏，两张海报。我们只想知道哪一种承诺更快被看懂。', left: 'linDragon', right: 'linPorcelain', tag: 'LOOK A / LOOK B' },
-  { speakerEn: 'LIN', speakerZh: '林', en: "They don't feel like the same person.", zh: '她们不像同一个人。', left: 'linDragon', right: 'linPorcelain' },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Not in the script. In the feed, nuance happens after the second click.', zh: '剧本里不是。信息流里，细节发生在第二次点击以后。', left: 'linDragon', right: 'richard' },
-  { speakerEn: 'LIN · CRIMSON EDGE', speakerZh: '林 · 绯红锋线', en: 'He thinks I am here to negotiate. Let him keep thinking that.', zh: '他以为我是来谈条件的。让他继续这么想。', center: 'linDragon', tag: 'RECOGNITION ↑↑ · CONTROL / DANGER / DESIRE' },
-  { speakerEn: 'LIN · PORCELAIN LIGHT', speakerZh: '林 · 瓷白柔光', en: 'I can wait. He said he would come back.', zh: '我可以等。他说过他会回来。', center: 'linPorcelain', tag: 'EMPATHY ↑ · INNOCENCE / LOYALTY / RESCUE' },
-  { speakerEn: 'DAVID', speakerZh: '大卫', en: "Both read immediately. That's rare.", zh: '两套都读得很快。这很少见。', left: 'linDragon', right: 'david' },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'Which part of me did they like?', zh: '他们喜欢的是我的哪一部分？', left: 'linNatural', right: 'david' },
-  { speakerEn: 'DAVID', speakerZh: '大卫', en: 'The part they could describe without asking your name.', zh: '不需要再问名字就能描述的那一部分。', left: 'linNatural', right: 'david' },
-  { speakerEn: 'CHOICE 02', speakerZh: '选择 02', en: 'The camera is ready.', zh: '镜头已经准备好。', left: 'linDragon', right: 'linPorcelain', choice: choice02 },
+  { speakerEn: 'DAVID', speakerZh: '大卫', en: "I reviewed your training. You don't lack ability. You lack a room willing to see it slowly.", zh: '我看了你的训练资料。你不缺能力，你缺的是允许能力被慢慢看见的空间。', left: 'linNatural', right: 'david', tag: 'AGENT PROFILE · DAVID CHEN' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Can you find that room?', zh: '你能找到那种房间吗？', left: 'linNatural', right: 'david' },
+  { speakerEn: 'DAVID', speakerZh: '大卫', en: 'Yes, but not quickly. I would protect your role range first, then build the opportunities.', zh: '能，但不会快。我会先保住你的角色范围，再一点点扩大机会。', left: 'linNatural', right: 'david', tag: 'CULTURAL UNDERSTANDING: HIGH · MARKET SPEED: STEADY' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "You don't have an acting problem. You have a recognition problem.", zh: '你没有表演问题。你有识别问题。', left: 'linNatural', tag: 'AGENT PROFILE · CLAIRE BENNETT' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'How would you solve it?', zh: '你准备怎么解决？', left: 'linNatural' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'Shorten the time it takes to understand you. Three seconds can decide a photo; ten can decide a meeting.', zh: '缩短别人理解你的时间。三秒足够决定一张照片，十秒足够决定一次会面。', left: 'linNatural', tag: 'MARKET ACCESS: STRONG · REVISION RATE: HIGH' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'And after the three seconds?', zh: '那三秒以后呢？', left: 'linNatural' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'First make them stay. Then we can discuss what comes after.', zh: '先让他们留下来，之后再谈以后。', left: 'linNatural' },
+  { speakerEn: 'CHOICE 02', speakerZh: '选择 02', en: 'Sign with an agent.', zh: '签约经纪人。', left: 'linNatural', right: 'david', choice: choice02 },
+  { speakerEn: 'LIN', speakerZh: '林', en: "I've been moving slowly long enough.", zh: '我已经慢得够久了。', left: 'linNatural' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'Good. Tomorrow we reorganize what people see first.', zh: '很好。明天开始，我们重新整理别人第一眼看到的东西。', left: 'linNatural' },
 ];
 
 const callback: Beat[] = [
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Both tests cleared. The thriller wants your edge; the romance wants your stillness.', zh: '两套测试都过了。惊悚片要你的锋利，爱情片要你的安静。', left: 'linNatural', right: 'richard', showProjects: true },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'What about the reporter?', zh: '记者那个角色呢？', left: 'linNatural', right: 'richard', showProjects: true },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'They liked the work. Marketing is still looking for an entry point.', zh: '他们喜欢你的表演。市场部还在找入口。', left: 'linNatural', right: 'richard', showProjects: true },
-  { speakerEn: 'DAVID', speakerZh: '大卫', en: 'This is the first real offer with your name on it.', zh: '这是第一张写着你名字的正式报价。', left: 'linNatural', right: 'david', showProjects: true },
-  { speakerEn: 'CHOICE 03', speakerZh: '选择 03', en: 'Three rooms. Only two doors are open.', zh: '三个房间，只有两扇门打开。', left: 'linNatural', right: 'david', choice: choice03, showProjects: true },
-  { speakerEn: 'DAVID', speakerZh: '大卫', en: 'Night Orchid. Cleaner numbers, larger rollout.', zh: '《夜兰》。数据更干净，发行规模也更大。', left: 'linNatural', right: 'david', showProjects: true },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'Then her.', zh: '那就她。', left: 'linNatural', right: 'richard', showProjects: true },
-  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Good. Don't reinvent the look. We already know what works.", zh: '很好。造型不要重新发明，我们已经知道什么有效。', left: 'linDragon', right: 'richard', showProjects: true },
-];
-
-const locked: Beat[] = [
-  { speakerEn: 'THREE MONTHS LATER', speakerZh: '三个月后', en: 'What worked begins to become the only option.', zh: '有效开始变成唯一。', left: 'linNatural', right: 'maya', showRoleCard: true },
-  { speakerEn: 'LIN', speakerZh: '林', en: "She's an emergency-room doctor.", zh: '她是急诊科医生。', left: 'linNatural', right: 'maya', showRoleCard: true },
-  { speakerEn: 'DAVID · VOICE NOTE', speakerZh: '大卫 · 语音', en: 'Exactly. Competent, private, dangerous when pushed. The audience already believes you as that kind of woman.', zh: '对。能干，隐秘，被逼到最后会很危险。观众已经相信你是这种人。', left: 'linNatural', right: 'maya', showRoleCard: true },
-  { speakerEn: 'LIN', speakerZh: '林', en: 'Did they watch my audition?', zh: '他们看过我的试镜吗？', left: 'linNatural', right: 'maya' },
-  { speakerEn: 'DAVID · VOICE NOTE', speakerZh: '大卫 · 语音', en: 'They watched the trailer.', zh: '他们看过预告片。', left: 'linNatural', right: 'maya' },
+  { speakerEn: 'CLAIRE · BEFORE DINNER', speakerZh: '克莱尔 · 饭局前', en: "Tonight isn't an audition. Let him feel that you can stay in the same room for a long time.", zh: '今晚不谈试镜。先让他觉得你适合长时间待在同一个房间里。', left: 'linNatural', tag: 'CHAPTER 2 · DINNER' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'That still sounds like an audition.', zh: '这听起来还是试镜。', left: 'linNatural' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'A lot of auditions in this industry have no lines.', zh: '行业里很多试镜没有台词。', left: 'linNatural' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Claire says you're adapting quickly.", zh: 'Claire 说你适应得很快。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'I used to think adapting to the role was enough.', zh: '我以前以为适应角色就够了。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Projects are long. People also notice whether you make the work easy.', zh: '项目很长。大家也会看你是否让工作变得简单。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'SERVER', speakerZh: '服务员', en: 'May I take your order?', zh: '现在为您点单吗？', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'CHOICE 04', speakerZh: '选择 04', en: 'Choose the order and social rhythm.', zh: '选择点单与社交节奏。', left: 'linNatural', right: 'richard', choice: choice04 },
+  { speakerEn: 'LIN', speakerZh: '林', en: "I'll have what Richard is having. Medium rare.", zh: '跟 Richard 一样。牛排五分熟。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Good. You're learning faster than last time.", zh: '很好。你学得比上次快。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Do you mean the acting?', zh: '你说的是表演吗？', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'I mean collaboration.', zh: '我说的是合作。', left: 'linNatural', right: 'richard', tag: 'DIRECTOR FAVOR +1' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'A magazine needs a new face next week. Claire will send the details.', zh: '下周有一本杂志需要新面孔。Claire 会把资料发给你。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Because of tonight?', zh: '因为今晚？', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Because you made me believe tomorrow won't be harder.", zh: '因为你让我相信明天不会更难。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'First cover?', zh: '第一次拍封面？', left: 'linNatural', right: 'maya', tag: 'CHAPTER 3 · REFRAME' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'First time someone asked me here by name.', zh: '第一次有人因为我的名字让我来。', left: 'linNatural', right: 'maya' },
+  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'Then remember what you looked like when you walked in.', zh: '那就记住你进门时穿的样子。', left: 'linNatural', right: 'maya' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Why?', zh: '为什么？', left: 'linNatural', right: 'maya' },
+  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'You usually look different when you leave.', zh: '离开时通常不一样。', left: 'linNatural', right: 'maya' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "It's elegant, and it's safe. We need something sexier.", zh: '很体面，也很安全。我们需要更性感一点。', left: 'linNatural', right: 'richard', tag: 'ELEGANT · CREDIBLE · LOW IMMEDIATE HEAT' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'The interview is about my work.', zh: '采访谈的是我的工作。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'The cover decides whether they ever reach the interview.', zh: '封面决定他们会不会读到采访。', left: 'linNatural' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'What do you want to replace?', zh: '你想换掉什么？', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: "Don't replace the culture. Turn it into a promise.", zh: '不要换掉文化。把它变成承诺。', left: 'linNatural', right: 'richard' },
+  { speakerEn: 'CHOICE 05', speakerZh: '选择 05', en: 'Respond to the magazine reframe.', zh: '回应杂志改造要求。', left: 'linNatural', right: 'richard', choice: choice05 },
+  { speakerEn: 'RICHARD', speakerZh: '理查德', en: 'Yes. Now the cover knows what to promise.', zh: '对。现在封面知道该承诺什么。', left: 'linDragon', right: 'richard', tag: 'PROJECTED ENGAGEMENT ×2.4' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "Hold this state. Don't remove it before the next set.", zh: '保持这个状态。不要在下一组之前卸掉。', left: 'linDragon' },
   { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'The first time, they ask if you can do it.', zh: '第一次，他们会问你能不能做到。', left: 'linDragon', right: 'maya' },
-  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'Later, they stop asking.', zh: '后来，他们就不再问了。', left: 'linDragon', right: 'maya' },
+  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'Later, the look is ready before you arrive.', zh: '后来，造型会在你到之前准备好。', left: 'linDragon', right: 'maya' },
   { speakerEn: 'LIN', speakerZh: '林', en: 'Did it work for you?', zh: '这对你有用吗？', left: 'linDragon', right: 'maya' },
   { speakerEn: 'MAYA', speakerZh: '玛雅', en: "I'm still working.", zh: '我还在工作。', left: 'linDragon', right: 'maya' },
   { speakerEn: 'LIN', speakerZh: '林', en: "That wasn't my question.", zh: '我问的不是这个。', left: 'linDragon', right: 'maya' },
-  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'I know.', zh: '我知道。', left: 'linDragon', right: 'maya' },
-  { speakerEn: 'CHOICE 04', speakerZh: '选择 04', en: 'A new role waits in the folder.', zh: '新角色已经在资料夹里。', left: 'linNatural', right: 'maya', choice: choice04, showRoleCard: true },
-  { speakerEn: 'DAVID · VOICE NOTE', speakerZh: '大卫 · 语音', en: "It's already in your folder.", zh: '已经在你的资料夹里了。', left: 'linDragon', right: 'maya', showRoleCard: true },
-  { speakerEn: 'MAYA · WATCHING THE MIRROR', speakerZh: '玛雅 · 看着镜子', en: "They haven't called action yet.", zh: '他们还没喊开始。', left: 'linDragon', right: 'maya' },
+  { speakerEn: 'MAYA', speakerZh: '玛雅', en: 'I know.', zh: '我知道。', left: 'linDragon', right: 'maya', tag: 'NEW MESSAGE · THREE SCRIPTS AWAIT SELECTION' },
+];
+
+const locked: Beat[] = [
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'The magazine has been live for six hours. We now have three formal offers.', zh: '杂志上线六小时。现在有三个正式邀约。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'That quickly?', zh: '这么快？', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "They didn't suddenly discover you can act. They finally know where to place you.", zh: '他们不是突然发现你会演戏。他们终于知道该把你放在哪里。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'The third role is the most complete.', zh: '第三个角色最完整。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "It's also the only project without a global distribution commitment.", zh: '也是唯一没有全球发行承诺的项目。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'LIN', speakerZh: '林', en: "Then these aren't the same kind of opportunity.", zh: '所以这三个不是同一种机会。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "They're all jobs. Some jobs simply change the size of the next one.", zh: '它们都是工作。只是有些工作会改变下一份工作的大小。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CHOICE 06', speakerZh: '选择 06', en: 'Choose a film script.', zh: '选择电影剧本。', left: 'linDragon', choice: choice06, showProjects: true },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Night Orchid.', zh: '选《夜兰》。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "Good. Keep the red-and-black look; they've already placed the magazine image in the pitch.", zh: '好。红黑造型保留，他们已经把杂志图放进提案。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'LIN', speakerZh: '林', en: "They haven't seen my audition.", zh: '他们还没看我的试镜。', left: 'linDragon', showProjects: true },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "They've seen the market response.", zh: '他们看过市场反应。', left: 'linDragon', showProjects: true, tag: 'SCRIPT LOCKED · NIGHT ORCHID' },
 ];
 
 const redCarpet: Beat[] = [
+  { speakerEn: 'PROCESS CARD 01', speakerZh: '过程图 01', en: 'The fight test: precise, controlled, internationally legible.', zh: '动作测试：精准、冷静、可国际发行。', center: 'linDragon', tag: 'NIGHT ORCHID · FIGHT TEST' },
+  { speakerEn: 'PROCESS CARD 02', speakerZh: '过程图 02', en: "The global poster keeps Lin's raised chin, blade silhouette, and the English title.", zh: '全球版海报只保留林抬起的下巴、短刃轮廓与英文片名。', center: 'linDragon', tag: 'GLOBAL POSTER · NIGHT ORCHID' },
+  { speakerEn: 'PROCESS CARD 03', speakerZh: '过程图 03', en: 'Opening weekend exceeds forecasts. Reviews repeat: icy, dangerous, mysterious.', zh: '首周末票房超过预测；评论高频词是：冰冷、危险、神秘。', center: 'linDragon', tag: 'OPENING WEEKEND · ABOVE FORECAST' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'Opening weekend doubled the forecast. A sequel and two brand offers are already in discussion.', zh: '首周末超过预测一倍。续集和两个品牌邀约都在谈。', center: 'linDragon' },
+  { speakerEn: 'LIN', speakerZh: '林', en: 'Did any review mention Anna?', zh: '评论里有人提到 Anna 吗？', center: 'linDragon' },
+  { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'They mentioned you.', zh: '他们提到了你。', center: 'linDragon' },
+  { speakerEn: 'RICHARD · VOICE MESSAGE', speakerZh: '理查德 · 语音消息', en: 'Now everyone knows how to pitch you.', zh: '现在所有人都知道该怎么介绍你。', center: 'linDragon', tag: 'FILM SUCCESS · FAME +5 · NEXT OFFERS 4' },
   { speakerEn: 'REPORTER 1', speakerZh: '记者 1', en: 'Lin, over here! Give us the Night Orchid eyes!', zh: '林，看这里！给我们《夜兰》里的眼神！', center: 'linDragon', right: 'maya', flash: true },
-  { speakerEn: 'REPORTER 2', speakerZh: '记者 2', en: "Chin a little higher—yes, that's the one!", zh: '下巴再高一点——对，就是那个！', center: 'linDragon', right: 'maya', flash: true },
-  { speakerEn: 'REPORTER 3', speakerZh: '记者 3', en: 'What kind of woman do you want to play next?', zh: '下一部，你最想演什么样的女人？', center: 'linDragon', right: 'maya', flash: true },
+  { speakerEn: 'REPORTER 2', speakerZh: '记者 2', en: 'Chin a little higher—yes, the magazine-cover one!', zh: '下巴再高一点——对，就是杂志封面那个！', center: 'linDragon', right: 'maya', flash: true },
+  { speakerEn: 'REPORTER 3', speakerZh: '记者 3', en: 'Is the next one another international action film?', zh: '下一部还是国际动作片吗？', center: 'linDragon', right: 'maya', flash: true },
+  { speakerEn: 'REPORTER 1', speakerZh: '记者 1', en: 'What kind of woman do you most want to play?', zh: '你最想演什么样的女人？', center: 'linDragon', right: 'maya', flash: true },
   { speakerEn: 'LIN', speakerZh: '林', en: 'I want to play someone who—', zh: '我想演一个——', center: 'linDragon', right: 'maya' },
   { speakerEn: 'REPORTER 2', speakerZh: '记者 2', en: "Don't move! Hold that!", zh: '别动！就保持这个！', center: 'linDragon', right: 'maya', flash: true },
 ];
 
 const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, redCarpet };
-const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'training', callback: 'locked', locked: 'redCarpet', redCarpet: 'ending' };
+const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', redCarpet: 'ending' };
 const stageInfo: Record<Screen, { index: string; label: string }> = {
-  title: { index: '00', label: 'CASTING ME' }, creator: { index: '00', label: 'FACE CASTING' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
-  firstRead: { index: '01', label: 'FIRST READ' }, lookTest: { index: '02', label: 'LOOK TEST' }, training: { index: '02.5', label: 'TRAINING' },
-  callback: { index: '03', label: 'CALLBACK' }, locked: { index: '04', label: 'LOCKED' }, redCarpet: { index: '05', label: 'RED CARPET' }, ending: { index: 'END', label: 'LOOK PRESET SAVED' },
+  title: { index: '00', label: 'CASTING ME' }, creator: { index: '02B', label: 'FACE EDITOR' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
+  firstRead: { index: '01', label: 'DOWNFALL' }, lookTest: { index: '02A', label: 'CHOOSE AN AGENT' }, training: { index: '04B', label: 'TRAINING TRADE-OFF' },
+  callback: { index: '02C–03', label: 'DINNER / REFRAME' }, locked: { index: '04A', label: 'THREE SCRIPTS' }, redCarpet: { index: '04C–D', label: 'SUCCESS / RED CARPET' }, ending: { index: 'END', label: 'SUCCESS REGISTERED' },
 };
 
 function ping(enabled: boolean, frequency = 520) {
@@ -216,7 +262,7 @@ export default function Home() {
   }, []);
 
   const progress = useMemo(() => {
-    const order: Screen[] = ['creator', 'prologue', 'profile', 'firstRead', 'lookTest', 'training', 'callback', 'locked', 'redCarpet', 'ending'];
+    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'creator', 'callback', 'locked', 'training', 'redCarpet', 'ending'];
     return Math.max(0, Math.round(((order.indexOf(screen) + 1) / order.length) * 100));
   }, [screen]);
 
@@ -243,7 +289,7 @@ export default function Home() {
       setHudPulse(true);
       window.setTimeout(() => setHudPulse(false), 650);
     }
-    setChoiceNotice(set.result);
+    setChoiceNotice(language === 'en' ? set.resultEn : set.resultZh);
     window.setTimeout(() => {
       if (beats && beatIndex < beats.length - 1) setBeatIndex((value) => value + 1);
       else if (screenNext[screen]) moveTo(screenNext[screen]!);
@@ -256,17 +302,34 @@ export default function Home() {
 
   const confirmAvatar = () => {
     try { window.localStorage.setItem('casting-me-avatar', avatar); } catch { /* Keep the in-session selection. */ }
-    moveTo('prologue');
+    if (!resolved.includes('face-preset')) {
+      setFame((value) => value + 2);
+      setPressure((value) => value + 2);
+      setResolved((value) => [...value, 'face-preset']);
+      setHudPulse(true);
+      window.setTimeout(() => setHudPulse(false), 650);
+    }
+    moveTo('callback');
+  };
+
+  const completeTraining = () => {
+    if (!resolved.includes('film-success')) {
+      setFame((value) => value + 5);
+      setResolved((value) => [...value, 'film-success']);
+      setHudPulse(true);
+      window.setTimeout(() => setHudPulse(false), 650);
+    }
+    moveTo('redCarpet');
   };
 
   return (
     <main className={`vn-app scene-${screen}`}>
       <GameTopbar screen={screen} progress={progress} language={language} setLanguage={setLanguage} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
-      {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('creator')} />}
+      {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
       {screen === 'creator' && <AvatarCreator language={language} avatar={avatar} setAvatar={setAvatar} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={() => moveTo('callback')} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onRestart={restart} />}
       {beat && <DialogueScene beat={beat} language={language} avatar={avatar} index={beatIndex} total={beats?.length ?? 1} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
@@ -321,8 +384,8 @@ function AvatarCreator({ language, avatar, setAvatar, soundOn, onConfirm }: { la
           </div>
         </div>
         <div className="creator-controls">
-          <p>FACE CASTING · LIN_001</p>
-          <h2>{language === 'en' ? 'MAKE YOUR LIN' : '塑造你的林'}</h2>
+          <p>CHOICE 03 · COSMETIC PRESET</p>
+          <h2>{language === 'en' ? 'REORGANIZE THE FIRST LOOK' : '重新整理第一眼'}</h2>
           <div className="creator-rule"><span>{language === 'en' ? 'LOCKED' : '固定'}</span><b>{language === 'en' ? 'LIGHT SKIN · BLACK DRESS · BODY' : '浅肤色 · 黑色礼服 · 身体'}</b></div>
           <h3>{language === 'en' ? 'HAIR + FACIAL FEATURES' : '头发 + 面部特征'}</h3>
           <div className="avatar-options">
@@ -336,8 +399,8 @@ function AvatarCreator({ language, avatar, setAvatar, soundOn, onConfirm }: { la
               );
             })}
           </div>
-          <p className="creator-note">{language === 'en' ? 'Your selected face and hair stay with Lin throughout the game and on your next visit.' : '确认后，林会在整段游戏和下次打开时持续使用这一形象。'}</p>
-          <Button className="confirm-avatar-button" onClick={onConfirm}>{language === 'en' ? 'LOCK THIS LOOK' : '确认这个形象'} <ChevronRight /></Button>
+          <p className="creator-note">{language === 'en' ? '“It still looks like me.” — “Exactly. Just easier to file.” Your selection stays with Lin throughout the game.' : '“看起来还是我。”——“对。只是更容易被归档。”确认后，该形象会贯穿整段游戏。'}</p>
+          <Button className="confirm-avatar-button" onClick={onConfirm}>{language === 'en' ? 'SAVE MARKET-READY LOOK · +2 / +2' : '保存市场化形象 · +2 / +2'} <ChevronRight /></Button>
         </div>
       </div>
     </section>
@@ -393,7 +456,7 @@ function DialogueScene({ beat, language, avatar, index, total, choiceReady, choi
 function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSet; language: Language; ready: boolean; notice: string; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   return (
     <div className="choice-panel">
-      <div className="choice-title"><span>{language === 'en' ? 'CASTING RESPONSE' : '试镜回应'}</span><small>{language === 'en' ? 'Choose a line' : '选择一句台词'}</small></div>
+      <div className="choice-title"><span>{language === 'en' ? 'CAREER RESPONSE' : '职业回应'}</span><small>{language === 'en' ? 'Choose a response' : '选择回应'}</small></div>
       <div className="choice-list">
         {set.items.map((choice, index) => (
           <button key={choice.id} className={choice.preset && ready ? 'preset' : ''} onClick={() => onChoice(choice, set)}>
@@ -408,19 +471,22 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
 
 function TrainingScreen({ language, avatar, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
-    { id: 'acting', label: 'ACTING', zh: '表演', result: 'DEPTH REGISTERED', detailEn: 'Suspicion · Protection · Revenge', detailZh: '怀疑 · 保护 · 报复' },
-    { id: 'martial', label: 'MARTIAL ARTS', zh: '武术', result: 'TAG: COMBAT-READY', detailEn: 'Fatigue not registered', detailZh: '疲惫未被登记' },
-    { id: 'accent', label: 'ASIAN ACCENT', zh: '亚洲口音', result: 'TAG: INTERNATIONAL', detailEn: '“Easier to place”', detailZh: '“更容易被听出来”' },
+    { id: 'acting', label: 'SCENE STUDY', zh: '场景分析', result: 'FIGHT TEST READINESS: LOW', detailEn: 'ACTING +1 · fight-test readiness low', detailZh: 'ACTING +1 · 动作测试准备不足' },
+    { id: 'martial', label: 'MARTIAL ARTS', zh: '武打训练', result: 'MARTIAL ARTS +1 · ACTING -1', detailEn: 'Preset route · one training slot', detailZh: '预设路线 · 唯一训练时段' },
+    { id: 'recovery', label: 'RECOVERY', zh: '休息恢复', result: 'PROJECT READINESS: DOWN', detailEn: 'PRESSURE -1 · project readiness reduced', detailZh: 'PRESSURE -1 · 项目准备度下降' },
   ];
-  const click = (id: string) => { if (done.includes(id)) return; ping(soundOn, 570 + done.length * 80); setDone([...done, id]); };
+  const click = (id: string) => {
+    if (id !== 'martial' || done.includes(id)) { ping(soundOn, 280); return; }
+    ping(soundOn, 680); setDone([id]);
+  };
   return (
     <section className="training-screen stage-screen">
-      <div className="training-copy"><span>TRAINING TOKENS ×3</span><h2>{language === 'en' ? 'What becomes a market tag?' : '什么会变成市场标签？'}</h2><p>{language === 'en' ? 'Training changes the language used to describe Lin. It does not change Fame or Pressure.' : '训练只改变描述林的语言，不直接改变 Fame 或 Pressure。'}</p></div>
+      <div className="training-copy"><span>CHOICE 07 · SINGLE TRAINING SLOT</span><h2>{language === 'en' ? 'The fight test moved to Friday.' : '动作测试提前到了周五。'}</h2><p>{language === 'en' ? '“This film won’t delay because you understand the character better.” Training changes skills, not Fame or Pressure.' : '“这部电影不会因为你更理解角色而延期。”训练改变技能，不改变 Fame 或 Pressure。'}</p></div>
       <div className="training-tokens">
-        {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small></button>)}
+        {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
       <AvatarArt avatar={avatar} className="training-character" />
-      <Button className="continue-button" disabled={done.length !== 3} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO CALLBACK' : '进入回调'} <ChevronRight /></Button>
+      <Button className="continue-button" disabled={!done.includes('martial')} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO FILM RELEASE' : '进入电影上映'} <ChevronRight /></Button>
     </section>
   );
 }
@@ -431,10 +497,11 @@ function EndingScreen({ language, avatar, fame, pressure, onRestart }: { languag
       <div className="ending-flash" />
       <Sprite sprite="linDragon" avatar={avatar} position="center ending-lin" />
       <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
-      <div className="ending-echo">“Now I know how to pitch you.”</div>
+      <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
-        <span>LOOK PRESET SAVED</span><h2>NIGHT ORCHID</h2><p>DRAGON LADY · SAME EYES · SAME HAIR · SAME RESTRAINT</p>
+        <span>SUCCESS REGISTERED</span><h2>NIGHT ORCHID</h2><p>LOOK PRESET: DRAGON LADY · NEXT CASTING NOTE: SAME ENERGY</p>
         <div><b>FAME {fame}</b><b>PRESSURE {pressure}</b></div>
+        <div><b>ORIENTALIZATION 82%</b><b>CHOICE WIDTH 1/3</b></div>
         <blockquote>{language === 'en' ? 'She is seen. Her sentence is not finished.' : '她被看见了。她的话没有说完。'}</blockquote>
         <Button className="restart-button" onClick={onRestart}><RotateCcw /> {language === 'en' ? 'PLAY AGAIN' : '重新开始'}</Button>
       </div>
@@ -454,7 +521,7 @@ function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string
 }
 
 function ProjectCards() {
-  return <div className="project-cards"><article className="hot"><span>01</span><b>NIGHT ORCHID</b><small>INFORMATION BROKER · DRAGON LADY</small></article><article><span>02</span><b>PAPER MOON</b><small>IMMIGRANT LOVE INTEREST · CHINA DOLL</small></article><article className="hold"><span>03</span><b>THE THIRD ROOM</b><small>INVESTIGATIVE REPORTER · POSITIONING UNCLEAR</small></article></div>;
+  return <div className="project-cards"><article className="hot"><span>01 · WIDE RELEASE</span><b>NIGHT ORCHID</b><small>ANNA WU · DRAGON LADY · +2 / +1</small></article><article><span>02 · WIDE RELEASE</span><b>WHITE SEASON</b><small>LILY · WHITE LOTUS · +2 / +1</small></article><article className="hold"><span>03 · LIMITED</span><b>SMALL WEATHER</b><small>MEI · NO MARKET TAG · +0 / +0</small></article></div>;
 }
 
 function RoleCard() {
