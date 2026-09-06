@@ -625,7 +625,13 @@ function Sprite({ sprite, avatar, position }: { sprite: SpriteKey; avatar: Avata
 
 function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string }) {
   const option = avatarOptions[avatar];
-  return <img className={className} src={option.src} alt={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
+  return (
+    <span className={`avatar-stack ${className}`} role="img" aria-label={`Lin · ${option.hairEn} · ${option.faceEn}`}>
+      <img className="avatar-layer avatar-layer-base" src="/avatar-layers/body-face.png" alt="" aria-hidden="true" />
+      <img className="avatar-layer avatar-layer-back" src={`/avatar-layers/hair-back-${avatar}.png`} alt="" aria-hidden="true" />
+      <img className="avatar-layer avatar-layer-front" src={`/avatar-layers/hair-front-${avatar}.png`} alt="" aria-hidden="true" />
+    </span>
+  );
 }
 
 function ProjectCards() {

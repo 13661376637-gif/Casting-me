@@ -129,6 +129,9 @@ button { font: inherit; }
 
 /* Characters */
 .character-sprite { position:absolute; z-index:5; bottom:-8%; max-width:none; height:min(82vh,900px); object-fit:contain; object-position:bottom; filter:drop-shadow(10px 14px 9px rgba(18,25,35,.3)); user-select:none; pointer-events:none; transition:opacity .2s ease; animation:sprite-in .24s ease both; }
+.avatar-stack { position:relative; display:block; width:auto; aspect-ratio:512 / 1280; }
+.avatar-stack .avatar-layer { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:bottom; pointer-events:none; user-select:none; }
+.avatar-stack.avatar-thumb { width:62px; height:94px; }
 .character-sprite.left { left:clamp(-80px,2vw,28px); }
 .character-sprite.right { right:clamp(-80px,2vw,28px); transform:scaleX(-1); }
 .character-sprite.center { left:50%; transform:translateX(-50%); }
