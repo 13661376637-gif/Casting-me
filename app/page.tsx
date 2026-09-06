@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronRight,
   ChevronsRight,
+  Clapperboard,
+  Flower2,
   FolderOpen,
   RotateCcw,
+  Sword,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -442,19 +445,22 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
 }
 
 function DialogueScene({ beat, language, avatar, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
-  const sceneClass = beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
+  const isScriptChoice = beat.choice?.id === 'choice-06';
+  const sceneClass = isScriptChoice ? 'script-selection' : beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
-      {beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
-      {beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
-      {beat.showProjects && <ProjectCards />}
+      {!isScriptChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
+      {!isScriptChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
+      {!isScriptChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
+      {beat.showProjects && !isScriptChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
 
       {beat.choice ? (
-        <ChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
+        isScriptChoice
+          ? <ScriptChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
+          : <ChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
       ) : (
         <div className="dialogue-shell">
           <span className="speaker-tag">{language === 'en' ? beat.speakerEn : beat.speakerZh}</span>
@@ -480,6 +486,50 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
         ))}
       </div>
       <p className="choice-notice">{notice || (ready ? (language === 'en' ? 'Preset route available.' : '预设路线已亮起。') : (language === 'en' ? 'Reading the room…' : '正在读取现场…'))}</p>
+    </div>
+  );
+}
+
+function ScriptChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSet; language: Language; ready: boolean; notice: string; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+  const scripts = [
+    { id: 'a', tone: 'dragon', Icon: Sword, number: '01', titleEn: 'DRAGON LADY', titleZh: '龙女', filmEn: 'NIGHT ORCHID', filmZh: '《夜兰》', roleEn: 'ANNA WU', roleZh: '吴安娜', releaseEn: 'WIDE RELEASE', releaseZh: '商业院线', stats: 'FAME +2 · PRESSURE +1' },
+    { id: 'b', tone: 'lotus', Icon: Flower2, number: '02', titleEn: 'WHITE LOTUS', titleZh: '白莲花', filmEn: 'WHITE SEASON', filmZh: '《白色花季》', roleEn: 'LILY', roleZh: '莉莉', releaseEn: 'WIDE RELEASE', releaseZh: '商业院线', stats: 'FAME +2 · PRESSURE +1' },
+    { id: 'c', tone: 'indie', Icon: Clapperboard, number: '03', titleEn: 'INDEPENDENT FILM', titleZh: '独立电影', filmEn: 'SMALL WEATHER', filmZh: '《小城天气》', roleEn: 'MEI', roleZh: '梅', releaseEn: 'LIMITED RELEASE', releaseZh: '小规模发行', stats: 'FAME +0 · PRESSURE +0' },
+  ];
+
+  return (
+    <div className="script-choice-panel">
+      <header className="script-choice-heading">
+        <span>{language === 'en' ? 'SELECT A SCRIPT' : '选择剧本'}</span>
+        <small>{language === 'en' ? '选择剧本' : 'SELECT A SCRIPT'}</small>
+      </header>
+      <div className="script-choice-grid">
+        {scripts.map((script) => {
+          const choice = set.items.find((item) => item.id === script.id)!;
+          const isPreset = Boolean(choice.preset && ready);
+          const Icon = script.Icon;
+          return (
+            <button
+              key={script.id}
+              className={`script-folder ${script.tone} ${isPreset ? 'preset' : ''}`}
+              onClick={() => onChoice(choice, set)}
+              aria-label={language === 'en' ? choice.en : choice.zh}
+            >
+              <span className="script-number">SCRIPT {script.number}</span>
+              <span className="script-titles">
+                <b>{language === 'en' ? script.titleEn : script.titleZh}</b>
+                <em>{language === 'en' ? script.titleZh : script.titleEn}</em>
+              </span>
+              <span className="script-emblem" aria-hidden="true"><Icon /></span>
+              <span className="script-film">{language === 'en' ? script.filmEn : script.filmZh}</span>
+              <span className="script-meta">{language === 'en' ? script.roleEn : script.roleZh} · {language === 'en' ? script.releaseEn : script.releaseZh}</span>
+              <span className="script-stats">{script.stats}</span>
+              {isPreset && <span className="script-preset">PRESET</span>}
+            </button>
+          );
+        })}
+      </div>
+      <p className="script-choice-notice">{notice || (ready ? (language === 'en' ? 'Preset route available. Choose a file.' : '预设路线已亮起，请选择剧本。') : (language === 'en' ? 'Reviewing the project slate…' : '正在读取项目列表…'))}</p>
     </div>
   );
 }
