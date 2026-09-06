@@ -123,6 +123,17 @@ const lookOptions: Record<LookKey, { src: string; en: string; zh: string; hairEn
   qipao: { src: '/looks-v14/lin-qipao.png', en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
 };
 
+function getFacePreviewSrc(selections: FaceSelections) {
+  const faceKeys = Object.keys(faceFeatureOptions) as FeatureKey[];
+  const codedLevel = faceKeys.filter((key) => key !== 'skin' && faceFeatureOptions[key].options.find((option) => option.id === selections[key])?.coded).length;
+  if (selections.skin === 'deep') {
+    return codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.jpg' : '/face-customizer-v14/lin-face-natural-deep.jpg';
+  }
+  if (codedLevel >= 3) return '/face-customizer-v14/lin-face-coded-high-pale.jpg';
+  if (codedLevel >= 1) return '/face-customizer-v14/lin-face-coded-mid.jpg';
+  return '/face-customizer-v14/lin-face-natural.jpg';
+}
+
 const choice01: ChoiceSet = {
   id: 'choice-01', fame: -1, pressure: 2, resultEn: 'AUDITION RESULT: NOT ALIGNED · FAME -1 · PRESSURE +2', resultZh: '试镜结果：不匹配 · FAME -1 · PRESSURE +2',
   items: [
@@ -416,9 +427,9 @@ export default function Home() {
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
       {screen === 'creator' && <AvatarCreatorV14 language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -561,10 +572,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
     const selected = faceFeatureOptions[key].options.find((option) => option.id === selections[key])!;
     return { fame: score.fame + selected.fame, pressure: score.pressure + selected.pressure };
   }, { fame: 0, pressure: 0 });
-  const codedLevel = faceKeys.filter((key) => key !== 'skin' && faceFeatureOptions[key].options.find((option) => option.id === selections[key])?.coded).length;
-  const faceSrc = selections.skin === 'deep'
-    ? (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.jpg' : '/face-customizer-v14/lin-face-natural-deep.jpg')
-    : (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-pale.jpg' : codedLevel >= 1 ? '/face-customizer-v14/lin-face-coded-mid.jpg' : '/face-customizer-v14/lin-face-natural.jpg');
+  const faceSrc = getFacePreviewSrc(selections);
   const currentFeature = faceFeatureOptions[activeTool];
   const currentLook = lookOptions[selectedLook ?? 'natural'];
   const totalFame = faceScore.fame + (selectedLook ? currentLook.fame : 0);
@@ -690,7 +698,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, lockedLook, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -698,9 +706,9 @@ function DialogueScene({ beat, language, avatar, lockedLook, index, total, backg
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} position="left" />}
-      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} position="center" />}
-      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} position="right" />}
+      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
+      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
+      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="right" />}
       {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -822,7 +830,7 @@ function ScriptChoicePanel({ set, language, ready, notice, onChoice }: { set: Ch
   );
 }
 
-function TrainingScreen({ language, avatar, lockedLook, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
+function TrainingScreen({ language, avatar, lockedLook, lockedFace, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
     { id: 'acting', label: 'SCENE STUDY', zh: '场景分析', result: 'FIGHT TEST READINESS: LOW', detailEn: 'ACTING +1 · fight-test readiness low', detailZh: 'ACTING +1 · 动作测试准备不足' },
     { id: 'martial', label: 'MARTIAL ARTS', zh: '武打训练', result: 'MARTIAL ARTS +1 · ACTING -1', detailEn: 'Preset route · one training slot', detailZh: '预设路线 · 唯一训练时段' },
@@ -838,7 +846,7 @@ function TrainingScreen({ language, avatar, lockedLook, done, setDone, soundOn, 
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
-      <Sprite sprite="linTraining" avatar={avatar} lockedLook={lockedLook} position="training-character" />
+      <Sprite sprite="linTraining" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="training-character" />
       <Button className="continue-button" disabled={!done.includes('martial')} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO FILM RELEASE' : '进入电影上映'} <ChevronRight /></Button>
     </section>
   );
@@ -848,7 +856,7 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} position="center ending-lin" />
+      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center ending-lin" />
       <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
@@ -862,12 +870,18 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
   );
 }
 
-function Sprite({ sprite, avatar, lockedLook = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; position: string }) {
+function Sprite({ sprite, avatar, lockedLook = null, lockedFace = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; lockedFace?: FaceSelections | null; position: string }) {
   const data = sprites[sprite];
   if (sprite.startsWith('lin') && lockedLook) {
     const look = lookOptions[lockedLook];
     const src = lockedLook === 'qipao' && sprite === 'linDragonBack' ? sprites.linDragonBack.src : look.src;
-    return <img className={`character-sprite ${position}`} src={src} alt={`Lin · ${look.en}`} />;
+    if (sprite === 'linDragonBack') return <img className={`character-sprite ${position}`} src={src} alt={`Lin · ${look.en}`} />;
+    return (
+      <span className={`character-sprite character-composite ${position} look-${lockedLook}`} role="img" aria-label={`Lin · ${look.en} · saved face`}>
+        <img className="character-composite-body" src={src} alt="" aria-hidden="true" />
+        {lockedFace && <span className={`character-face-mask ${lockedFace.skin === 'porcelain' ? 'tone-porcelain' : ''}`} aria-hidden="true"><img src={getFacePreviewSrc(lockedFace)} alt="" /></span>}
+      </span>
+    );
   }
   const useScenePose = avatar === 'original' && ['linGraduation', 'linDragon', 'linDragonBack', 'linTraining'].includes(sprite);
   if (sprite.startsWith('lin') && !useScenePose) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
