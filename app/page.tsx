@@ -446,20 +446,24 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
 
 function DialogueScene({ beat, language, avatar, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
-  const sceneClass = isScriptChoice ? 'script-selection' : beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
+  const isAgentChoice = beat.choice?.id === 'choice-02';
+  const isFullScreenChoice = isScriptChoice || isAgentChoice;
+  const sceneClass = isScriptChoice ? 'script-selection' : isAgentChoice ? 'agent-selection' : beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isScriptChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
-      {!isScriptChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
-      {!isScriptChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
-      {beat.showProjects && !isScriptChoice && <ProjectCards />}
+      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
+      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
+      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
+      {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
 
       {beat.choice ? (
         isScriptChoice
           ? <ScriptChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
+          : isAgentChoice
+            ? <AgentChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
           : <ChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
       ) : (
         <div className="dialogue-shell">
@@ -486,6 +490,44 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
         ))}
       </div>
       <p className="choice-notice">{notice || (ready ? (language === 'en' ? 'Preset route available.' : '预设路线已亮起。') : (language === 'en' ? 'Reading the room…' : '正在读取现场…'))}</p>
+    </div>
+  );
+}
+
+function AgentChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSet; language: Language; ready: boolean; notice: string; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+  const agents = [
+    { id: 'a', tone: 'david', number: '01', src: sprites.david.src, nameEn: 'DAVID CHEN', nameZh: '大卫', focusEn: 'ROLE RANGE', focusZh: '角色宽度', traitEn: 'CULTURAL UNDERSTANDING · HIGH', traitZh: '文化理解 · 高', paceEn: 'MARKET SPEED · STEADY', paceZh: '市场速度 · 稳健' },
+    { id: 'b', tone: 'claire', number: '02', src: sprites.claire.src, nameEn: 'CLAIRE BENNETT', nameZh: '克莱尔', focusEn: 'MARKET ACCESS', focusZh: '市场入口', traitEn: 'MARKET ACCESS · STRONG', traitZh: '市场资源 · 强', paceEn: 'REVISION RATE · HIGH', paceZh: '形象调整率 · 高' },
+  ];
+
+  return (
+    <div className="script-choice-panel agent-choice-panel">
+      <header className="script-choice-heading">
+        <span>{language === 'en' ? 'SELECT AN AGENT' : '选择经纪人'}</span>
+        <small>{language === 'en' ? '选择经纪人' : 'SELECT AN AGENT'}</small>
+      </header>
+      <div className="agent-choice-grid">
+        {agents.map((agent) => {
+          const choice = set.items.find((item) => item.id === agent.id)!;
+          const isPreset = Boolean(choice.preset && ready);
+          return (
+            <button
+              key={agent.id}
+              className={`script-folder agent-folder ${agent.tone} ${isPreset ? 'preset' : ''}`}
+              onClick={() => onChoice(choice, set)}
+              aria-label={language === 'en' ? choice.en : choice.zh}
+            >
+              <span className="agent-number">AGENT FILE {agent.number}</span>
+              <span className="agent-name"><b>{language === 'en' ? agent.nameEn : agent.nameZh}</b><em>{language === 'en' ? agent.nameZh : agent.nameEn}</em></span>
+              <span className="agent-portrait"><img src={agent.src} alt={language === 'en' ? agent.nameEn : agent.nameZh} /></span>
+              <span className="agent-focus">{language === 'en' ? agent.focusEn : agent.focusZh}</span>
+              <span className="agent-traits"><b>{language === 'en' ? agent.traitEn : agent.traitZh}</b><b>{language === 'en' ? agent.paceEn : agent.paceZh}</b></span>
+              {isPreset && <span className="script-preset">PRESET</span>}
+            </button>
+          );
+        })}
+      </div>
+      <p className="script-choice-notice">{notice || (ready ? (language === 'en' ? 'Preset route available. Choose an agent file.' : '预设路线已亮起，请选择经纪人。') : (language === 'en' ? 'Reviewing representation offers…' : '正在读取签约方案…'))}</p>
     </div>
   );
 }

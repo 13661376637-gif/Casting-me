@@ -257,7 +257,8 @@ button { font: inherit; }
 .choice-notice { height:16px; margin:10px 5px 0; color:#f3c26d; font-size:10px; font-weight:800; letter-spacing:.08em; }
 
 /* Script selection: the existing VN shell reframed as a casting desk. */
-.dialogue-scene.script-selection::after {
+.dialogue-scene.script-selection::after,
+.dialogue-scene.agent-selection::after {
   content:"";
   position:absolute;
   inset:72px 0 0;
@@ -267,7 +268,8 @@ button { font: inherit; }
     repeating-linear-gradient(90deg,transparent 0 116px,rgba(245,232,199,.06) 117px 119px);
   backdrop-filter:blur(3px) saturate(.72);
 }
-.script-selection .set-dressing { display:none; }
+.script-selection .set-dressing,
+.agent-selection .set-dressing { display:none; }
 .script-choice-panel {
   position:absolute;
   inset:92px clamp(16px,3vw,48px) 18px;
@@ -366,6 +368,29 @@ button { font: inherit; }
 @keyframes script-preset-in { from{opacity:.72;transform:translateY(2px)} to{opacity:1;transform:translateY(-5px) rotate(-.35deg)} }
 .script-choice-notice { min-height:18px; margin:12px 0 0; color:#f3c26d; font-size:10px; font-weight:900; letter-spacing:.08em; text-align:center; }
 
+/* Agent selection: the same casting-file language, using the supplied character PNGs. */
+.agent-choice-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(18px,3vw,42px);
+  width:min(900px,88%);
+  flex:1;
+  min-height:0;
+}
+.agent-folder { padding:18px 20px 16px; }
+.agent-folder.david { color:#4d7f83; border-color:#5f9293; background:linear-gradient(150deg,#f2e6c8,#ded2b7); }
+.agent-folder.claire { color:#e36a96; border-color:#c94f7c; background:linear-gradient(150deg,#1d2635,#29394d); }
+.agent-number { align-self:flex-start; padding:4px 7px; border:1px solid currentColor; font-size:9px; font-weight:950; letter-spacing:.14em; }
+.agent-name { display:grid; justify-items:center; margin:10px 0 5px; }
+.agent-name b { font-size:clamp(23px,2.5vw,38px); font-weight:950; line-height:1; letter-spacing:.04em; }
+.agent-name em { margin-top:4px; font-family:Georgia,"Times New Roman",serif; font-size:clamp(11px,1.1vw,15px); font-style:normal; font-weight:900; letter-spacing:.16em; }
+.agent-portrait { display:block; width:76%; flex:1; min-height:0; margin:4px auto 8px; overflow:hidden; border-bottom:2px solid currentColor; }
+.agent-portrait img { display:block; width:100%; height:145%; object-fit:contain; object-position:center top; filter:drop-shadow(6px 8px 5px rgba(10,18,27,.25)); }
+.agent-focus { width:88%; padding:7px 5px 6px; border-top:2px solid currentColor; border-bottom:1px solid currentColor; font-size:clamp(12px,1.2vw,16px); font-weight:950; letter-spacing:.12em; }
+.agent-traits { display:flex; justify-content:center; gap:7px; margin-top:8px; }
+.agent-traits b { padding:5px 7px; color:#f5e8c7; background:#263446; font-size:8px; font-weight:900; letter-spacing:.05em; }
+.agent-folder.claire .agent-traits b { color:#1d2838; background:#f5e8c7; }
+
 /* Project and role cards */
 .project-cards { position:absolute; z-index:10; top:128px; left:50%; display:flex; gap:9px; width:min(680px,64vw); transform:translateX(-50%); }
 .project-cards article { flex:1; min-width:0; padding:11px; color:#263244; border:2px solid #263244; background:#e9dcc9e8; box-shadow:4px 4px 0 #26324466; }
@@ -448,6 +473,9 @@ button { font: inherit; }
   .script-folder { padding:16px 12px 14px; }
   .script-titles { margin-top:10px; }
   .script-meta { font-size:8px; }
+  .agent-choice-grid { width:min(800px,92%); gap:16px; }
+  .agent-folder { padding:14px 14px 12px; }
+  .agent-traits b { font-size:7px; }
 }
 
 @media (max-width: 640px) {
@@ -517,6 +545,16 @@ button { font: inherit; }
   .script-stats { display:none; }
   .script-preset { right:14px; bottom:12px; }
   .script-choice-notice { margin-top:15px; padding-bottom:6px; }
+  .agent-choice-grid { grid-template-columns:1fr; flex:none; gap:18px; width:92vw; }
+  .agent-folder { display:grid; grid-template-columns:38% 1fr; grid-template-rows:auto auto auto auto; min-height:285px; padding:16px; text-align:left; }
+  .agent-number { grid-column:1/3; }
+  .agent-name { grid-column:2; grid-row:2; align-self:end; justify-items:start; margin:12px 0 8px 14px; }
+  .agent-name b { font-size:26px; }
+  .agent-portrait { grid-column:1; grid-row:2/5; width:100%; height:220px; margin:6px 0 0; border-bottom:0; }
+  .agent-portrait img { height:145%; }
+  .agent-focus { grid-column:2; grid-row:3; width:calc(100% - 14px); margin-left:14px; font-size:12px; }
+  .agent-traits { grid-column:2; grid-row:4; flex-direction:column; align-items:flex-start; gap:5px; margin:8px 0 0 14px; }
+  .agent-traits b { font-size:7px; }
   .project-cards { top:96px;width:96vw;gap:4px; }
   .project-cards article { padding:7px; }
   .project-cards b { font-size:9px; }
