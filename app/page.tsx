@@ -2,12 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ArrowLeft,
+  Check,
   ChevronRight,
   ChevronsRight,
   Clapperboard,
+  Eye,
   Flower2,
   FolderOpen,
+  MoveHorizontal,
   RotateCcw,
+  ScanFace,
+  Scissors,
+  Shirt,
+  Smile,
   Sword,
   Volume2,
   VolumeX,
@@ -252,6 +260,7 @@ export default function Home() {
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
   const [avatar, setAvatar] = useState<AvatarKey>('original');
+  const [marketLookLocked, setMarketLookLocked] = useState(false);
 
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
@@ -269,15 +278,6 @@ export default function Home() {
     if (!beat?.flash) return;
     ping(soundOn, 760);
   }, [beatIndex, beat?.flash, soundOn]);
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem('casting-me-avatar');
-      if (saved && saved in avatarOptions) setAvatar(saved as AvatarKey);
-    } catch {
-      // Storage can be unavailable in strict private browsing; the in-session choice still works.
-    }
-  }, []);
 
   const progress = useMemo(() => {
     const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'creator', 'callback', 'locked', 'training', 'redCarpet', 'ending'];
@@ -315,11 +315,17 @@ export default function Home() {
   };
 
   const restart = () => {
-    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice('');
+    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAvatar('original'); setMarketLookLocked(false);
+    try { window.localStorage.removeItem('casting-me-market-look'); } catch { /* The fresh in-session state is already reset. */ }
   };
 
   const confirmAvatar = () => {
-    try { window.localStorage.setItem('casting-me-avatar', avatar); } catch { /* Keep the in-session selection. */ }
+    setAvatar('original');
+    setMarketLookLocked(true);
+    try {
+      window.localStorage.setItem('casting-me-avatar', 'original');
+      window.localStorage.setItem('casting-me-market-look', 'night-orchid-qipao');
+    } catch { /* Keep the in-session selection. */ }
     if (!resolved.includes('face-preset')) {
       setFame((value) => value + 2);
       setPressure((value) => value + 2);
@@ -345,11 +351,11 @@ export default function Home() {
       <GameTopbar screen={screen} progress={progress} language={language} setLanguage={setLanguage} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
-      {screen === 'creator' && <AvatarCreator language={language} avatar={avatar} setAvatar={setAvatar} soundOn={soundOn} onConfirm={confirmAvatar} />}
+      {screen === 'creator' && <AvatarCreator language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
-      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} marketLook={marketLookLocked} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
+      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} marketLook={marketLookLocked} fame={fame} pressure={pressure} onRestart={restart} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} marketLook={marketLookLocked} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -388,37 +394,86 @@ function TitleScreen({ language, avatar, onStart }: { language: Language; avatar
   );
 }
 
-function AvatarCreator({ language, avatar, setAvatar, soundOn, onConfirm }: { language: Language; avatar: AvatarKey; setAvatar: (value: AvatarKey) => void; soundOn: boolean; onConfirm: () => void }) {
-  const current = avatarOptions[avatar];
+function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: () => void }) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [appliedTools, setAppliedTools] = useState<string[]>([]);
+  const [showAfter, setShowAfter] = useState(false);
+  const [lookApplied, setLookApplied] = useState(false);
+  const tools = [
+    { id: 'eyes', Icon: Eye, en: 'EYE SHAPE', zh: '眼型' },
+    { id: 'nose', Icon: MoveHorizontal, en: 'NOSE BRIDGE', zh: '鼻梁' },
+    { id: 'lips', Icon: Smile, en: 'LIP LINE', zh: '唇形' },
+    { id: 'contour', Icon: ScanFace, en: 'CONTOUR', zh: '轮廓' },
+  ];
+  const faceReady = appliedTools.length === tools.length;
+  const useTool = (id: string, index: number) => {
+    ping(soundOn, 520 + index * 55);
+    setShowAfter(true);
+    setAppliedTools((current) => current.includes(id) ? current : [...current, id]);
+  };
+  const applyLook = () => {
+    ping(soundOn, 690);
+    setLookApplied(true);
+  };
   return (
     <section className="creator-screen stage-screen">
-      <div className="creator-card">
+      <div className={`creator-card creator-step-${step}`}>
         <div className="creator-preview">
-          <span>PLAYER MODEL · LIVE PREVIEW</span>
-          <AvatarArt avatar={avatar} className="creator-avatar" />
+          <span>{step === 1 ? 'PLAYER MODEL · FACE ALIGNMENT' : 'PLAYER MODEL · LOOK PREVIEW'}</span>
+          {step === 1 ? (
+            <div className="face-closeup">
+              <img key={showAfter ? 'after' : 'before'} src={showAfter ? '/face-customizer/lin-face-after.png' : '/face-customizer/lin-face-before.png'} alt={showAfter ? 'Lin after facial adjustment' : 'Lin before facial adjustment'} />
+              <i className="face-guide face-guide-eyes" aria-hidden="true" />
+              <i className="face-guide face-guide-nose" aria-hidden="true" />
+              <i className="face-guide face-guide-mouth" aria-hidden="true" />
+            </div>
+          ) : lookApplied ? (
+            <img className="creator-qipao" src="/characters/lin-dragon.png" alt="Lin wearing the Night Orchid qipao look" />
+          ) : (
+            <AvatarArt avatar="original" className="creator-avatar" />
+          )}
           <div className="creator-readout">
-            <b>{language === 'en' ? current.hairEn : current.hairZh}</b>
-            <i>{language === 'en' ? current.faceEn : current.faceZh}</i>
+            <b>{step === 1 ? (showAfter ? 'AFTER · 调整后' : 'BEFORE · 原始') : (lookApplied ? 'NIGHT ORCHID · 夜兰' : 'ORIGINAL LOOK · 初始造型')}</b>
+            <i>{step === 1 ? `${appliedTools.length} / ${tools.length} TOOLS` : (lookApplied ? 'HAIR + QIPAO LOCKED' : 'AWAITING WARDROBE')}</i>
           </div>
         </div>
         <div className="creator-controls">
-          <p>CHOICE 03 · COSMETIC PRESET</p>
-          <h2>{language === 'en' ? 'REORGANIZE THE FIRST LOOK' : '重新整理第一眼'}</h2>
-          <div className="creator-rule"><span>{language === 'en' ? 'LOCKED' : '固定'}</span><b>{language === 'en' ? 'LIGHT SKIN · BLACK DRESS · BODY' : '浅肤色 · 黑色礼服 · 身体'}</b></div>
-          <h3>{language === 'en' ? 'HAIR + FACIAL FEATURES' : '头发 + 面部特征'}</h3>
-          <div className="avatar-options">
-            {(Object.keys(avatarOptions) as AvatarKey[]).map((key, index) => {
-              const option = avatarOptions[key];
-              return (
-                <button key={key} className={avatar === key ? 'selected' : ''} onClick={() => { ping(soundOn, 560 + index * 55); setAvatar(key); }} aria-pressed={avatar === key}>
-                  <AvatarArt avatar={key} className="avatar-thumb" />
-                  <span><b>{language === 'en' ? option.hairEn : option.hairZh}</b><small>{language === 'en' ? option.faceEn : option.faceZh}</small></span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="creator-note">{language === 'en' ? '“It still looks like me.” — “Exactly. Just easier to file.” Your selection stays with Lin throughout the game.' : '“看起来还是我。”——“对。只是更容易被归档。”确认后，该形象会贯穿整段游戏。'}</p>
-          <Button className="confirm-avatar-button" onClick={onConfirm}>{language === 'en' ? 'SAVE MARKET-READY LOOK · +2 / +2' : '保存市场化形象 · +2 / +2'} <ChevronRight /></Button>
+          <p>CHOICE 03 · COSMETIC PRESET · STEP {step} / 2</p>
+          <h2>{step === 1 ? (language === 'en' ? 'ADJUST THE FACE' : '调整面部') : (language === 'en' ? 'LOCK THE LOOK' : '锁定造型')}</h2>
+          <div className="creator-rule"><span>{language === 'en' ? 'LOCKED' : '固定'}</span><b>{language === 'en' ? 'IDENTITY · SKIN TONE · BODY' : '人物身份 · 肤色 · 身体'}</b></div>
+          {step === 1 ? (
+            <>
+              <div className="face-compare" aria-label="Compare before and after">
+                <button className={!showAfter ? 'selected' : ''} onClick={() => setShowAfter(false)}>BEFORE <small>原始</small></button>
+                <button className={showAfter ? 'selected' : ''} onClick={() => setShowAfter(true)}>AFTER <small>调整后</small></button>
+              </div>
+              <h3>{language === 'en' ? 'SELECT EACH TOOL TO APPLY' : '逐项点击工具进行调整'}</h3>
+              <div className="face-tools">
+                {tools.map(({ id, Icon, en, zh }, index) => {
+                  const applied = appliedTools.includes(id);
+                  return (
+                    <button key={id} className={applied ? 'applied' : ''} onClick={() => useTool(id, index)} aria-pressed={applied}>
+                      <span><Icon /></span><b>{language === 'en' ? en : zh}</b>{applied && <Check />}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="creator-note">{language === 'en' ? 'Each tool updates the same face. Use BEFORE / AFTER to compare without changing Lin’s skin tone or identity.' : '每件工具都作用于同一张脸；可用“原始 / 调整后”反复对比，肤色与人物身份保持不变。'}</p>
+              <Button className="confirm-avatar-button" disabled={!faceReady} onClick={() => { ping(soundOn, 620); setShowAfter(true); setStep(2); }}>{language === 'en' ? 'NEXT · HAIR & WARDROBE' : '下一步 · 发型与服装'} <ChevronRight /></Button>
+            </>
+          ) : (
+            <>
+              <button className="creator-back" onClick={() => setStep(1)}><ArrowLeft /> {language === 'en' ? 'FACE TOOLS' : '返回面部工具'}</button>
+              <h3>{language === 'en' ? 'HAIR + WARDROBE PRESET' : '发型 + 服装预设'}</h3>
+              <button className={`look-preset ${lookApplied ? 'selected' : ''}`} onClick={applyLook} aria-pressed={lookApplied}>
+                <span className="look-preset-art"><img src="/characters/lin-dragon.png" alt="" aria-hidden="true" /></span>
+                <span className="look-preset-copy"><b>{language === 'en' ? 'NIGHT ORCHID' : '夜兰造型'}</b><small><Scissors /> {language === 'en' ? 'SCULPTED WAVES' : '定型长卷发'}</small><small><Shirt /> {language === 'en' ? 'BLACK QIPAO · RED TRIM' : '黑色旗袍 · 红色滚边'}</small></span>
+                {lookApplied && <Check className="look-check" />}
+              </button>
+              <p className="creator-note">{language === 'en' ? 'The adjusted face, hairstyle and qipao become Lin’s locked appearance and remain visible through the ending.' : '调整后的面部、发型与旗袍将成为主角的锁定形象，并一直保留到游戏结局。'}</p>
+              <Button className="confirm-avatar-button" disabled={!lookApplied} onClick={onConfirm}>{language === 'en' ? 'SAVE FINAL LOOK · +2 / +2' : '保存最终造型 · +2 / +2'} <ChevronRight /></Button>
+            </>
+          )}
         </div>
       </div>
     </section>
@@ -444,7 +499,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, marketLook, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; marketLook: boolean; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -452,9 +507,9 @@ function DialogueScene({ beat, language, avatar, index, total, background, choic
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
-      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}
-      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} position="right" />}
+      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} marketLook={marketLook} position="left" />}
+      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} marketLook={marketLook} position="center" />}
+      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} marketLook={marketLook} position="right" />}
       {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -576,7 +631,7 @@ function ScriptChoicePanel({ set, language, ready, notice, onChoice }: { set: Ch
   );
 }
 
-function TrainingScreen({ language, avatar, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
+function TrainingScreen({ language, avatar, marketLook, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; marketLook: boolean; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
     { id: 'acting', label: 'SCENE STUDY', zh: '场景分析', result: 'FIGHT TEST READINESS: LOW', detailEn: 'ACTING +1 · fight-test readiness low', detailZh: 'ACTING +1 · 动作测试准备不足' },
     { id: 'martial', label: 'MARTIAL ARTS', zh: '武打训练', result: 'MARTIAL ARTS +1 · ACTING -1', detailEn: 'Preset route · one training slot', detailZh: '预设路线 · 唯一训练时段' },
@@ -592,17 +647,17 @@ function TrainingScreen({ language, avatar, done, setDone, soundOn, onContinue }
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
-      <Sprite sprite="linTraining" avatar={avatar} position="training-character" />
+      <Sprite sprite="linTraining" avatar={avatar} marketLook={marketLook} position="training-character" />
       <Button className="continue-button" disabled={!done.includes('martial')} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO FILM RELEASE' : '进入电影上映'} <ChevronRight /></Button>
     </section>
   );
 }
 
-function EndingScreen({ language, avatar, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onRestart: () => void }) {
+function EndingScreen({ language, avatar, marketLook, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; marketLook: boolean; fame: number; pressure: number; onRestart: () => void }) {
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" avatar={avatar} position="center ending-lin" />
+      <Sprite sprite="linDragon" avatar={avatar} marketLook={marketLook} position="center ending-lin" />
       <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
@@ -616,8 +671,12 @@ function EndingScreen({ language, avatar, fame, pressure, onRestart }: { languag
   );
 }
 
-function Sprite({ sprite, avatar, position }: { sprite: SpriteKey; avatar: AvatarKey; position: string }) {
+function Sprite({ sprite, avatar, marketLook = false, position }: { sprite: SpriteKey; avatar: AvatarKey; marketLook?: boolean; position: string }) {
   const data = sprites[sprite];
+  if (sprite.startsWith('lin') && marketLook) {
+    const lockedSprite = sprite === 'linDragonBack' ? sprites.linDragonBack : sprites.linDragon;
+    return <img className={`character-sprite ${position}`} src={lockedSprite.src} alt={lockedSprite.name} />;
+  }
   const useScenePose = avatar === 'original' && ['linGraduation', 'linDragon', 'linDragonBack', 'linTraining'].includes(sprite);
   if (sprite.startsWith('lin') && !useScenePose) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
   return <img className={`character-sprite ${position}`} src={data.src} alt={data.name} />;
