@@ -201,6 +201,17 @@ const redCarpet: Beat[] = [
 
 const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, redCarpet };
 const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', redCarpet: 'ending' };
+
+function getSceneBackground(screen: Screen, beatIndex: number) {
+  if (screen === 'prologue') return beatIndex < 3 ? '/backgrounds/university-campus.png' : '/backgrounds/audition-room.png';
+  if (screen === 'firstRead') return beatIndex < 8 ? '/backgrounds/audition-room.png' : '/backgrounds/night-apartment.png';
+  if (screen === 'lookTest') return '/backgrounds/night-apartment.png';
+  if (screen === 'callback') return beatIndex < 15 ? '/backgrounds/western-restaurant.png' : '/backgrounds/magazine-studio.png';
+  if (screen === 'locked') return '/backgrounds/agency-meeting-room.png';
+  if (screen === 'redCarpet') return '/backgrounds/premiere-media-wall.png';
+  return undefined;
+}
+
 const stageInfo: Record<Screen, { index: string; label: string }> = {
   title: { index: '00', label: 'CASTING ME' }, creator: { index: '02B', label: 'FACE EDITOR' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
   firstRead: { index: '01', label: 'DOWNFALL' }, lookTest: { index: '02A', label: 'CHOOSE AN AGENT' }, training: { index: '04B', label: 'TRAINING TRADE-OFF' },
@@ -238,6 +249,7 @@ export default function Home() {
 
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
+  const sceneBackground = getSceneBackground(screen, beatIndex);
 
   useEffect(() => {
     setChoiceReady(false);
@@ -331,7 +343,7 @@ export default function Home() {
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
       {screen === 'training' && <TrainingScreen language={language} avatar={avatar} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} index={beatIndex} total={beats?.length ?? 1} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -426,10 +438,10 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, index, total, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const sceneClass = beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
   return (
-    <section className={`dialogue-scene ${sceneClass}`}>
+    <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
       {beat.left && <Sprite sprite={beat.left} avatar={avatar} position="left" />}
       {beat.center && <Sprite sprite={beat.center} avatar={avatar} position="center" />}

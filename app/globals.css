@@ -190,6 +190,7 @@ button { font: inherit; }
 
 /* Dialogue scenes */
 .dialogue-scene { position:relative; min-height:100svh; overflow:hidden; padding-top:72px; }
+.dialogue-scene.has-background { background-position:center; background-size:cover; background-repeat:no-repeat; }
 .dialogue-scene::after { content:""; position:absolute; inset:72px 0 0; z-index:0; background:linear-gradient(90deg,rgba(32,43,59,.18),transparent 26%,transparent 72%,rgba(32,43,59,.18)); pointer-events:none; }
 .scene-firstRead .dialogue-scene::before { background:linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(#cfd5db,#a7b3bb 72%,#717d84 72%); background-size:68px 100%,auto; }
 .scene-firstRead .dialogue-scene::after { background:linear-gradient(90deg,#68747e 0 2%,transparent 2% 85%,#49545d 85%),linear-gradient(0deg,#57636c 0 17%,transparent 17%); opacity:.6; }
@@ -198,6 +199,9 @@ button { font: inherit; }
 .scene-callback .dialogue-scene::before { background:linear-gradient(#aab6ba 0 62%,#6d7e7e 62%); }
 .scene-locked .dialogue-scene::before { background:linear-gradient(90deg,#8faaa6 0 16%,#d5c8d8 16% 75%,#726a80 75%); }
 .scene-redCarpet .dialogue-scene::before { background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.3),transparent 32%),repeating-linear-gradient(90deg,#59243b 0 140px,#6e2947 140px 280px); }
+.dialogue-scene.has-background::before { background:linear-gradient(180deg,rgba(18,26,38,.08),rgba(18,26,38,.2)); }
+.profile-screen { background:url('/backgrounds/university-campus.png') center/cover no-repeat; }
+.profile-screen::before { background:linear-gradient(135deg,rgba(209,202,226,.3),rgba(64,88,91,.44)); }
 .set-dressing { position:absolute; z-index:3; top:98px; left:50%; display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-50%); color:#263244; }
 .set-dressing span { padding:6px 12px; border:2px solid #263244; background:rgba(245,232,199,.9); font-size:10px; font-weight:950; letter-spacing:.13em; }
 .set-dressing i { font-size:9px; font-style:normal; font-weight:900; letter-spacing:.14em; }
@@ -292,7 +296,7 @@ button { font: inherit; }
 .continue-button:disabled { opacity:.35; box-shadow:none; }
 
 /* Ending */
-.ending-screen { position:relative; min-height:100svh; padding-top:72px; overflow:hidden; color:white; background:radial-gradient(circle at 50% 33%,#9e4669,#5c233b 46%,#291c2b 100%); }
+.ending-screen { position:relative; min-height:100svh; padding-top:72px; overflow:hidden; color:white; background:linear-gradient(rgba(35,18,38,.35),rgba(35,18,38,.58)),url('/backgrounds/premiere-media-wall.png') center/cover no-repeat; }
 .ending-screen::before { content:"NIGHT ORCHID   NIGHT ORCHID   NIGHT ORCHID"; position:absolute; inset:104px 0 auto; padding:15px 0; overflow:hidden; color:#f0bfce; border-top:1px solid #e7bfc8;border-bottom:1px solid #e7bfc8; font-size:28px;font-weight:950;letter-spacing:.13em;white-space:nowrap;text-align:center;opacity:.44; }
 .ending-screen .character-sprite { height:min(87vh,900px); bottom:-12%; }
 .ending-maya { right:-8%!important; height:min(68vh,700px)!important; opacity:.55; }
