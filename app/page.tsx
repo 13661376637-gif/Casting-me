@@ -563,8 +563,8 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
   }, { fame: 0, pressure: 0 });
   const codedLevel = faceKeys.filter((key) => key !== 'skin' && faceFeatureOptions[key].options.find((option) => option.id === selections[key])?.coded).length;
   const faceSrc = selections.skin === 'deep'
-    ? (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.png' : '/face-customizer-v14/lin-face-natural-deep.png')
-    : (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-pale.png' : codedLevel >= 1 ? '/face-customizer-v14/lin-face-coded-mid.png' : '/face-customizer-v14/lin-face-natural.png');
+    ? (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.jpg' : '/face-customizer-v14/lin-face-natural-deep.jpg')
+    : (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-pale.jpg' : codedLevel >= 1 ? '/face-customizer-v14/lin-face-coded-mid.jpg' : '/face-customizer-v14/lin-face-natural.jpg');
   const currentFeature = faceFeatureOptions[activeTool];
   const currentLook = lookOptions[selectedLook ?? 'natural'];
   const totalFame = faceScore.fame + (selectedLook ? currentLook.fame : 0);
