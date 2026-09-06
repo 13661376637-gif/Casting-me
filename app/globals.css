@@ -193,7 +193,6 @@ button { font: inherit; }
 .dialogue-scene.has-background { background-position:center; background-size:cover; background-repeat:no-repeat; }
 .dialogue-scene::after { content:""; position:absolute; inset:72px 0 0; z-index:0; background:linear-gradient(90deg,rgba(32,43,59,.18),transparent 26%,transparent 72%,rgba(32,43,59,.18)); pointer-events:none; }
 .scene-firstRead .dialogue-scene::before { background:linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(#cfd5db,#a7b3bb 72%,#717d84 72%); background-size:68px 100%,auto; }
-.scene-firstRead .dialogue-scene::after { background:linear-gradient(90deg,#68747e 0 2%,transparent 2% 85%,#49545d 85%),linear-gradient(0deg,#57636c 0 17%,transparent 17%); opacity:.6; }
 .scene-lookTest .dialogue-scene::before { background:linear-gradient(105deg,#751f3a 0 44%,#e8d9c6 44.3% 100%); }
 .scene-training::before { background:linear-gradient(145deg,#172234,#24384b 60%,#4e6f70); }
 .scene-callback .dialogue-scene::before { background:linear-gradient(#aab6ba 0 62%,#6d7e7e 62%); }
