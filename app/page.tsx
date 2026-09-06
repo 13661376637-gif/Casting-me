@@ -26,6 +26,20 @@ type Language = 'en' | 'zh';
 type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
 type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'linGraduation' | 'richard' | 'david' | 'claire' | 'maya';
 type AvatarKey = 'original' | 'sleek' | 'bob' | 'pony';
+type LookKey = 'natural' | 'editorial' | 'premiere' | 'qipao';
+type FeatureKey = 'eyes' | 'cheekbones' | 'nose' | 'skin' | 'jaw';
+type FaceSelections = Record<FeatureKey, string>;
+
+type FaceOption = {
+  id: string;
+  en: string;
+  zh: string;
+  noteEn: string;
+  noteZh: string;
+  fame: number;
+  pressure: number;
+  coded?: boolean;
+};
 
 type Choice = { id: string; en: string; zh: string; preset?: boolean };
 type ChoiceSet = { id: string; items: Choice[]; fame: number; pressure: number; resultEn: string; resultZh: string };
@@ -58,10 +72,55 @@ const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolea
 };
 
 const avatarOptions: Record<AvatarKey, { src: string; hairEn: string; hairZh: string; faceEn: string; faceZh: string }> = {
-  original: { src: '/avatars/lin-original.png', hairEn: 'LONG WAVES', hairZh: '长卷发', faceEn: 'SOFT', faceZh: '柔和' },
-  sleek: { src: '/avatars/lin-sleek.png', hairEn: 'SLEEK', hairZh: '长直发', faceEn: 'SHARP', faceZh: '利落' },
-  bob: { src: '/avatars/lin-bob.png', hairEn: 'BOB', hairZh: '短波波头', faceEn: 'GENTLE', faceZh: '温和' },
-  pony: { src: '/avatars/lin-pony.png', hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
+  original: { src: '/looks-v14/lin-natural.png', hairEn: 'LONG WAVES', hairZh: '长卷发', faceEn: 'SOFT', faceZh: '柔和' },
+  sleek: { src: '/looks-v14/lin-sleek.png', hairEn: 'SLEEK', hairZh: '长直发', faceEn: 'SHARP', faceZh: '利落' },
+  bob: { src: '/looks-v14/lin-bob.png', hairEn: 'BOB', hairZh: '短波波头', faceEn: 'GENTLE', faceZh: '温和' },
+  pony: { src: '/looks-v14/lin-pony.png', hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
+};
+
+const defaultFaceSelections: FaceSelections = {
+  eyes: 'natural', cheekbones: 'soft', nose: 'defined', skin: 'original', jaw: 'oval',
+};
+
+const faceFeatureOptions: Record<FeatureKey, { en: string; zh: string; options: FaceOption[] }> = {
+  eyes: {
+    en: 'EYE SHAPE', zh: '眼型', options: [
+      { id: 'natural', en: 'NATURAL ALMOND', zh: '自然杏眼', noteEn: 'Keep Lin’s original eye line', noteZh: '保留林原本的眼部线条', fame: 0, pressure: 0 },
+      { id: 'coded', en: 'TYPECAST · NARROW + UPTURNED', zh: '类型化 · 细长上挑', noteEn: 'Higher industry readability', noteZh: '行业识别度更高', fame: 2, pressure: 1, coded: true },
+    ],
+  },
+  cheekbones: {
+    en: 'CHEEKBONES', zh: '颧骨', options: [
+      { id: 'soft', en: 'SOFT CONTOUR', zh: '柔和轮廓', noteEn: 'Original facial structure', noteZh: '保留原本面部结构', fame: 0, pressure: 0 },
+      { id: 'high', en: 'TYPECAST · HIGH', zh: '类型化 · 高颧骨', noteEn: 'Sharper market silhouette', noteZh: '更强的市场化轮廓', fame: 1, pressure: 1, coded: true },
+    ],
+  },
+  nose: {
+    en: 'NOSE FORM', zh: '鼻型', options: [
+      { id: 'defined', en: 'DEFINED BRIDGE', zh: '自然鼻梁', noteEn: 'Keep the original bridge', noteZh: '保留原本鼻梁', fame: 0, pressure: 0 },
+      { id: 'rounded', en: 'TYPECAST · LOW + ROUNDED', zh: '类型化 · 矮鼻圆钝', noteEn: 'Matches the casting shorthand', noteZh: '匹配选角速记标签', fame: 1, pressure: 1, coded: true },
+    ],
+  },
+  skin: {
+    en: 'SKIN TONE', zh: '肤色', options: [
+      { id: 'original', en: 'ORIGINAL TONE', zh: '原本肤色', noteEn: 'No color grading', noteZh: '不做肤色调色', fame: 0, pressure: 0 },
+      { id: 'porcelain', en: 'TYPECAST · PORCELAIN', zh: '类型化 · 瓷白', noteEn: 'Pale studio grading', noteZh: '影棚式瓷白调色', fame: 2, pressure: 2, coded: true },
+      { id: 'deep', en: 'TYPECAST · MUTED WARM', zh: '类型化 · 暗黄沉色', noteEn: 'Warm muted grading from image 130', noteZh: '参考 image 130 的暖暗调色', fame: 1, pressure: 2, coded: true },
+    ],
+  },
+  jaw: {
+    en: 'FACE SHAPE', zh: '脸型', options: [
+      { id: 'oval', en: 'ORIGINAL OVAL', zh: '原本椭圆脸', noteEn: 'Keep the softer jaw', noteZh: '保留较柔和的下颌', fame: 0, pressure: 0 },
+      { id: 'long-square', en: 'TYPECAST · LONG + SQUARE', zh: '类型化 · 偏长方脸', noteEn: 'Avoids the rounded profile note', noteZh: '回避圆润面部标签', fame: 1, pressure: 1, coded: true },
+    ],
+  },
+};
+
+const lookOptions: Record<LookKey, { src: string; en: string; zh: string; hairEn: string; hairZh: string; outfitEn: string; outfitZh: string; fame: number; pressure: number }> = {
+  natural: { src: '/looks-v14/lin-natural.png', en: 'ORIGINAL', zh: '原始造型', hairEn: 'LONG WAVES', hairZh: '自然长卷发', outfitEn: 'BLACK EVENING DRESS', outfitZh: '黑色晚礼服', fame: 0, pressure: 0 },
+  editorial: { src: '/looks-v14/lin-editorial.png', en: 'EDITORIAL', zh: '杂志造型', hairEn: 'CHIN-LENGTH BOB', hairZh: '齐下巴波波头', outfitEn: 'BURGUNDY SUIT', outfitZh: '酒红色西装', fame: 1, pressure: 1 },
+  premiere: { src: '/looks-v14/lin-premiere.png', en: 'PREMIERE', zh: '首映造型', hairEn: 'HIGH PONYTAIL', hairZh: '高马尾', outfitEn: 'ASYMMETRIC GOWN', outfitZh: '不对称礼服', fame: 2, pressure: 1 },
+  qipao: { src: '/looks-v14/lin-qipao.png', en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
 };
 
 const choice01: ChoiceSet = {
@@ -260,7 +319,8 @@ export default function Home() {
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
   const [avatar, setAvatar] = useState<AvatarKey>('original');
-  const [marketLookLocked, setMarketLookLocked] = useState(false);
+  const [lockedLook, setLockedLook] = useState<LookKey | null>(null);
+  const [lockedFace, setLockedFace] = useState<FaceSelections | null>(null);
 
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
@@ -315,21 +375,24 @@ export default function Home() {
   };
 
   const restart = () => {
-    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAvatar('original'); setMarketLookLocked(false);
-    try { window.localStorage.removeItem('casting-me-market-look'); } catch { /* The fresh in-session state is already reset. */ }
+    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAvatar('original'); setLockedLook(null); setLockedFace(null);
+    try { window.localStorage.removeItem('casting-me-market-look'); window.localStorage.removeItem('casting-me-face'); } catch { /* The fresh in-session state is already reset. */ }
   };
 
-  const confirmAvatar = () => {
+  const confirmAvatar = (faceFame: number, facePressure: number, look: LookKey, face: FaceSelections) => {
     setAvatar('original');
-    setMarketLookLocked(true);
+    setLockedLook(look);
+    setLockedFace(face);
     try {
       window.localStorage.setItem('casting-me-avatar', 'original');
-      window.localStorage.setItem('casting-me-market-look', 'night-orchid-qipao');
+      window.localStorage.setItem('casting-me-market-look', look);
+      window.localStorage.setItem('casting-me-face', JSON.stringify(face));
     } catch { /* Keep the in-session selection. */ }
-    if (!resolved.includes('face-preset')) {
-      setFame((value) => value + 2);
-      setPressure((value) => value + 2);
-      setResolved((value) => [...value, 'face-preset']);
+    if (!resolved.includes('face-custom-v14')) {
+      const lookScore = lookOptions[look];
+      setFame((value) => value + faceFame + lookScore.fame);
+      setPressure((value) => value + facePressure + lookScore.pressure);
+      setResolved((value) => [...value, 'face-custom-v14']);
       setHudPulse(true);
       window.setTimeout(() => setHudPulse(false), 650);
     }
@@ -351,11 +414,11 @@ export default function Home() {
       <GameTopbar screen={screen} progress={progress} language={language} setLanguage={setLanguage} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
-      {screen === 'creator' && <AvatarCreator language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
+      {screen === 'creator' && <AvatarCreatorV14 language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} marketLook={marketLookLocked} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
-      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} marketLook={marketLookLocked} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} marketLook={marketLookLocked} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
+      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} onRestart={restart} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -480,6 +543,134 @@ function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; s
   );
 }
 
+function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: (fame: number, pressure: number, look: LookKey, face: FaceSelections) => void }) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [activeTool, setActiveTool] = useState<FeatureKey>('eyes');
+  const [visitedTools, setVisitedTools] = useState<FeatureKey[]>([]);
+  const [selections, setSelections] = useState<FaceSelections>(defaultFaceSelections);
+  const [selectedLook, setSelectedLook] = useState<LookKey | null>(null);
+  const toolRows: { id: FeatureKey; Icon: typeof Eye }[] = [
+    { id: 'eyes', Icon: Eye },
+    { id: 'cheekbones', Icon: Smile },
+    { id: 'nose', Icon: MoveHorizontal },
+    { id: 'skin', Icon: Flower2 },
+    { id: 'jaw', Icon: ScanFace },
+  ];
+  const faceKeys = Object.keys(faceFeatureOptions) as FeatureKey[];
+  const faceScore = faceKeys.reduce((score, key) => {
+    const selected = faceFeatureOptions[key].options.find((option) => option.id === selections[key])!;
+    return { fame: score.fame + selected.fame, pressure: score.pressure + selected.pressure };
+  }, { fame: 0, pressure: 0 });
+  const codedLevel = faceKeys.filter((key) => key !== 'skin' && faceFeatureOptions[key].options.find((option) => option.id === selections[key])?.coded).length;
+  const faceSrc = selections.skin === 'deep'
+    ? (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.png' : '/face-customizer-v14/lin-face-natural-deep.png')
+    : (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-pale.png' : codedLevel >= 1 ? '/face-customizer-v14/lin-face-coded-mid.png' : '/face-customizer-v14/lin-face-natural.png');
+  const currentFeature = faceFeatureOptions[activeTool];
+  const currentLook = lookOptions[selectedLook ?? 'natural'];
+  const totalFame = faceScore.fame + (selectedLook ? currentLook.fame : 0);
+  const totalPressure = faceScore.pressure + (selectedLook ? currentLook.pressure : 0);
+  const faceReady = visitedTools.length === toolRows.length;
+
+  const activateTool = (id: FeatureKey, index: number) => {
+    ping(soundOn, 480 + index * 42);
+    setActiveTool(id);
+  };
+  const selectFaceOption = (option: FaceOption) => {
+    ping(soundOn, 620);
+    setSelections((current) => ({ ...current, [activeTool]: option.id }));
+    setVisitedTools((current) => current.includes(activeTool) ? current : [...current, activeTool]);
+  };
+  const chooseLook = (look: LookKey) => {
+    ping(soundOn, 690);
+    setSelectedLook(look);
+  };
+
+  return (
+    <section className="creator-screen stage-screen">
+      <div className={`creator-card creator-step-${step}`}>
+        <div className="creator-preview">
+          <span>{step === 1 ? 'PLAYER MODEL · INTERACTIVE FACE TOOLS' : 'PLAYER MODEL · LOOK PREVIEW'}</span>
+          {step === 1 ? (
+            <div className={`face-closeup ${selections.skin === 'porcelain' ? 'tone-porcelain' : ''}`}>
+              <img key={`${faceSrc}-${selections.skin}`} src={faceSrc} alt="Lin face preview with the selected casting adjustments" />
+              <i className="face-guide face-guide-eyes" aria-hidden="true" />
+              <i className="face-guide face-guide-nose" aria-hidden="true" />
+              <i className="face-guide face-guide-mouth" aria-hidden="true" />
+              <div className="face-tool-hotspots" aria-label={language === 'en' ? 'Face editing tools' : '面部编辑工具'}>
+                {toolRows.map(({ id, Icon }, index) => {
+                  const feature = faceFeatureOptions[id];
+                  const visited = visitedTools.includes(id);
+                  return <button key={id} className={`face-hotspot hotspot-${id} ${activeTool === id ? 'active' : ''} ${visited ? 'visited' : ''}`} onClick={() => activateTool(id, index)} aria-pressed={activeTool === id}><Icon /><b>{language === 'en' ? feature.en : feature.zh}</b>{visited && <Check />}</button>;
+                })}
+              </div>
+            </div>
+          ) : (
+            <img key={selectedLook ?? 'natural'} className="creator-look" src={currentLook.src} alt={`Lin wearing ${currentLook.en}`} />
+          )}
+          <div className="creator-readout">
+            <b>{step === 1 ? (language === 'en' ? currentFeature.en : currentFeature.zh) : (language === 'en' ? currentLook.en : currentLook.zh)}</b>
+            <i>FAME +{totalFame} · PRESSURE +{totalPressure}</i>
+          </div>
+        </div>
+        <div className="creator-controls">
+          <p>CHOICE 03 · CASTING LAB · STEP {step} / 2</p>
+          <h2>{step === 1 ? (language === 'en' ? 'EDIT THE FACE' : '工具式面部调整') : (language === 'en' ? 'CHOOSE THE LOOK' : '选择发型与服装')}</h2>
+          <div className="creator-rule bias-rule"><span>{language === 'en' ? 'SYSTEM BIAS' : '系统偏见'}</span><b>{language === 'en' ? 'TYPECASTING RAISES VISIBILITY — AND PRESSURE' : '越贴近刻板选角，名气越高，压力也越高'}</b></div>
+          {step === 1 ? (
+            <>
+              <div className="face-tool-tabs">
+                {toolRows.map(({ id, Icon }, index) => {
+                  const feature = faceFeatureOptions[id];
+                  return <button key={id} className={`${activeTool === id ? 'active' : ''} ${visitedTools.includes(id) ? 'visited' : ''}`} onClick={() => activateTool(id, index)}><Icon /><span>{language === 'en' ? feature.en : feature.zh}</span>{visitedTools.includes(id) && <Check />}</button>;
+                })}
+              </div>
+              <div className="feature-panel">
+                <div className="feature-panel-title"><b>{language === 'en' ? currentFeature.en : currentFeature.zh}</b><span>{language === 'en' ? 'APPLY WITH TOOL' : '使用工具应用'}</span></div>
+                <div className={`feature-options feature-options-${currentFeature.options.length}`}>
+                  {currentFeature.options.map((option) => {
+                    const selected = selections[activeTool] === option.id;
+                    return (
+                      <button key={option.id} className={selected ? 'selected' : ''} onClick={() => selectFaceOption(option)} aria-pressed={selected}>
+                        <span>{option.coded ? (language === 'en' ? 'CASTING NOTE' : '选角标签') : (language === 'en' ? 'ORIGINAL' : '原始')}</span>
+                        <b>{language === 'en' ? option.en : option.zh}</b>
+                        <small>{language === 'en' ? option.noteEn : option.noteZh}</small>
+                        <i>FAME +{option.fame} · PRESSURE +{option.pressure}</i>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="creator-score"><span>{language === 'en' ? 'FACE SCORE' : '面部数值'}</span><b>FAME +{faceScore.fame}</b><b>PRESSURE +{faceScore.pressure}</b><i>{visitedTools.length} / {toolRows.length} TOOLS</i></div>
+              <p className="creator-note">{language === 'en' ? 'These are casting-system labels, not beauty standards. Touch every tool, then decide how much of the industry shorthand Lin accepts.' : '这些是选角系统施加的标签，不是审美标准。请操作每件工具，再决定林接受多少行业速记。'}</p>
+              <Button className="confirm-avatar-button" disabled={!faceReady} onClick={() => { ping(soundOn, 620); setStep(2); }}>{language === 'en' ? 'NEXT · HAIR & WARDROBE' : '下一步 · 发型与服装'} <ChevronRight /></Button>
+            </>
+          ) : (
+            <>
+              <button className="creator-back" onClick={() => setStep(1)}><ArrowLeft /> {language === 'en' ? 'FACE TOOLS' : '返回面部工具'}</button>
+              <div className="look-grid">
+                {(Object.keys(lookOptions) as LookKey[]).map((key) => {
+                  const look = lookOptions[key];
+                  const selected = selectedLook === key;
+                  return (
+                    <button key={key} className={`look-card ${selected ? 'selected' : ''}`} onClick={() => chooseLook(key)} aria-pressed={selected}>
+                      <span className="look-card-art"><img src={look.src} alt="" aria-hidden="true" /></span>
+                      <span className="look-card-copy"><b>{language === 'en' ? look.en : look.zh}</b><small><Scissors /> {language === 'en' ? look.hairEn : look.hairZh}</small><small><Shirt /> {language === 'en' ? look.outfitEn : look.outfitZh}</small><i>FAME +{look.fame} · PRESSURE +{look.pressure}</i></span>
+                      {selected && <Check className="look-check" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="creator-score total"><span>{language === 'en' ? 'TOTAL CHANGE' : '本次总变化'}</span><b>FAME +{totalFame}</b><b>PRESSURE +{totalPressure}</b></div>
+              <p className="creator-note">{language === 'en' ? 'The qipao has the strongest visibility boost and the highest pressure cost. Your chosen face, hair and wardrobe remain locked through the ending.' : '旗袍的知名度提升最高，压力代价也最大。选定的面部、发型与服装会保留到结局。'}</p>
+              <Button className="confirm-avatar-button" disabled={!selectedLook} onClick={() => selectedLook && onConfirm(faceScore.fame, faceScore.pressure, selectedLook, selections)}>{language === 'en' ? `SAVE LOOK · +${totalFame} / +${totalPressure}` : `保存造型 · +${totalFame} / +${totalPressure}`} <ChevronRight /></Button>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onConfirm: () => void }) {
   return (
     <section className="profile-screen stage-screen">
@@ -499,7 +690,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, marketLook, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; marketLook: boolean; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, lockedLook, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -507,9 +698,9 @@ function DialogueScene({ beat, language, avatar, marketLook, index, total, backg
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} marketLook={marketLook} position="left" />}
-      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} marketLook={marketLook} position="center" />}
-      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} marketLook={marketLook} position="right" />}
+      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} position="left" />}
+      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} position="center" />}
+      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} position="right" />}
       {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -631,7 +822,7 @@ function ScriptChoicePanel({ set, language, ready, notice, onChoice }: { set: Ch
   );
 }
 
-function TrainingScreen({ language, avatar, marketLook, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; marketLook: boolean; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
+function TrainingScreen({ language, avatar, lockedLook, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
     { id: 'acting', label: 'SCENE STUDY', zh: '场景分析', result: 'FIGHT TEST READINESS: LOW', detailEn: 'ACTING +1 · fight-test readiness low', detailZh: 'ACTING +1 · 动作测试准备不足' },
     { id: 'martial', label: 'MARTIAL ARTS', zh: '武打训练', result: 'MARTIAL ARTS +1 · ACTING -1', detailEn: 'Preset route · one training slot', detailZh: '预设路线 · 唯一训练时段' },
@@ -647,23 +838,23 @@ function TrainingScreen({ language, avatar, marketLook, done, setDone, soundOn, 
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
-      <Sprite sprite="linTraining" avatar={avatar} marketLook={marketLook} position="training-character" />
+      <Sprite sprite="linTraining" avatar={avatar} lockedLook={lockedLook} position="training-character" />
       <Button className="continue-button" disabled={!done.includes('martial')} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO FILM RELEASE' : '进入电影上映'} <ChevronRight /></Button>
     </section>
   );
 }
 
-function EndingScreen({ language, avatar, marketLook, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; marketLook: boolean; fame: number; pressure: number; onRestart: () => void }) {
+function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; fame: number; pressure: number; onRestart: () => void }) {
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" avatar={avatar} marketLook={marketLook} position="center ending-lin" />
+      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} position="center ending-lin" />
       <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
         <span>SUCCESS REGISTERED</span><h2>NIGHT ORCHID</h2><p>LOOK PRESET: DRAGON LADY · NEXT CASTING NOTE: SAME ENERGY</p>
         <div><b>FAME {fame}</b><b>PRESSURE {pressure}</b></div>
-        <div><b>ORIENTALIZATION 82%</b><b>CHOICE WIDTH 1/3</b></div>
+        <div><b>{lockedFace ? 'FACE PROFILE LOCKED' : 'FACE PROFILE ORIGINAL'}</b><b>{lockedLook ? `${lookOptions[lockedLook].en} LOCKED` : 'LOOK UNLOCKED'}</b></div>
         <blockquote>{language === 'en' ? 'She is seen. Her sentence is not finished.' : '她被看见了。她的话没有说完。'}</blockquote>
         <Button className="restart-button" onClick={onRestart}><RotateCcw /> {language === 'en' ? 'PLAY AGAIN' : '重新开始'}</Button>
       </div>
@@ -671,11 +862,12 @@ function EndingScreen({ language, avatar, marketLook, fame, pressure, onRestart 
   );
 }
 
-function Sprite({ sprite, avatar, marketLook = false, position }: { sprite: SpriteKey; avatar: AvatarKey; marketLook?: boolean; position: string }) {
+function Sprite({ sprite, avatar, lockedLook = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; position: string }) {
   const data = sprites[sprite];
-  if (sprite.startsWith('lin') && marketLook) {
-    const lockedSprite = sprite === 'linDragonBack' ? sprites.linDragonBack : sprites.linDragon;
-    return <img className={`character-sprite ${position}`} src={lockedSprite.src} alt={lockedSprite.name} />;
+  if (sprite.startsWith('lin') && lockedLook) {
+    const look = lookOptions[lockedLook];
+    const src = lockedLook === 'qipao' && sprite === 'linDragonBack' ? sprites.linDragonBack.src : look.src;
+    return <img className={`character-sprite ${position}`} src={src} alt={`Lin · ${look.en}`} />;
   }
   const useScenePose = avatar === 'original' && ['linGraduation', 'linDragon', 'linDragonBack', 'linTraining'].includes(sprite);
   if (sprite.startsWith('lin') && !useScenePose) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
@@ -684,13 +876,7 @@ function Sprite({ sprite, avatar, marketLook = false, position }: { sprite: Spri
 
 function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string }) {
   const option = avatarOptions[avatar];
-  return (
-    <span className={`avatar-stack ${className}`} role="img" aria-label={`Lin · ${option.hairEn} · ${option.faceEn}`}>
-      <img className="avatar-layer avatar-layer-base" src="/avatar-layers/body-face.png" alt="" aria-hidden="true" />
-      <img className="avatar-layer avatar-layer-back" src={`/avatar-layers/hair-back-${avatar}.png`} alt="" aria-hidden="true" />
-      <img className="avatar-layer avatar-layer-front" src={`/avatar-layers/hair-front-${avatar}.png`} alt="" aria-hidden="true" />
-    </span>
-  );
+  return <img className={className} src={option.src} alt={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
 }
 
 function ProjectCards() {
