@@ -129,14 +129,6 @@ button { font: inherit; }
 
 /* Characters */
 .character-sprite { position:absolute; z-index:5; bottom:-8%; max-width:none; height:min(82vh,900px); object-fit:contain; object-position:bottom; filter:drop-shadow(10px 14px 9px rgba(18,25,35,.3)); user-select:none; pointer-events:none; transition:opacity .2s ease; animation:sprite-in .24s ease both; }
-.character-composite { display:block; width:auto; aspect-ratio:2 / 5; overflow:visible; }
-.character-composite-body { display:block; width:100%; height:100%; object-fit:contain; object-position:bottom; }
-.character-face-mask { position:absolute; z-index:2; left:32%; top:5.3%; width:36%; height:18%; overflow:hidden; -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 0 73%,rgba(0,0,0,.78) 82%,transparent 100%); mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 0 73%,rgba(0,0,0,.78) 82%,transparent 100%); }
-.character-face-mask img { position:absolute; top:-34%; left:-68%; width:236%; height:auto; max-width:none; }
-.character-face-mask.tone-porcelain img { filter:brightness(1.07) saturate(.78); }
-.character-composite.look-editorial .character-face-mask { left:33%; top:6.2%; width:34%; height:17.3%; }
-.character-composite.look-premiere .character-face-mask { left:33%; top:5.5%; width:34%; height:17%; }
-.character-composite.look-qipao .character-face-mask { left:33%; top:5.7%; width:34%; height:17.4%; }
 .avatar-stack { position:relative; display:block; width:auto; aspect-ratio:512 / 1280; }
 .avatar-stack .avatar-layer { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:bottom; pointer-events:none; user-select:none; }
 .avatar-stack.avatar-thumb { width:62px; height:94px; }
