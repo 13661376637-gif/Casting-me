@@ -27,6 +27,7 @@ type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'look
 type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'linGraduation' | 'richard' | 'david' | 'claire' | 'maya';
 type AvatarKey = 'original' | 'sleek' | 'bob' | 'pony';
 type LookKey = 'natural' | 'editorial' | 'premiere' | 'qipao';
+type HairLayerKey = AvatarKey | 'qipao';
 type FeatureKey = 'eyes' | 'cheekbones' | 'nose' | 'skin' | 'jaw';
 type FaceSelections = Record<FeatureKey, string>;
 
@@ -71,11 +72,11 @@ const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolea
   maya: { src: '/characters/maya.png', name: 'Maya Park' },
 };
 
-const avatarOptions: Record<AvatarKey, { src: string; hairEn: string; hairZh: string; faceEn: string; faceZh: string }> = {
-  original: { src: '/looks-v14/lin-natural.png', hairEn: 'LONG WAVES', hairZh: '长卷发', faceEn: 'SOFT', faceZh: '柔和' },
-  sleek: { src: '/looks-v14/lin-sleek.png', hairEn: 'SLEEK', hairZh: '长直发', faceEn: 'SHARP', faceZh: '利落' },
-  bob: { src: '/looks-v14/lin-bob.png', hairEn: 'BOB', hairZh: '短波波头', faceEn: 'GENTLE', faceZh: '温和' },
-  pony: { src: '/looks-v14/lin-pony.png', hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
+const avatarOptions: Record<AvatarKey, { hairEn: string; hairZh: string; faceEn: string; faceZh: string }> = {
+  original: { hairEn: 'LONG WAVES', hairZh: '长卷发', faceEn: 'SOFT', faceZh: '柔和' },
+  sleek: { hairEn: 'SLEEK', hairZh: '长直发', faceEn: 'SHARP', faceZh: '利落' },
+  bob: { hairEn: 'BOB', hairZh: '短波波头', faceEn: 'GENTLE', faceZh: '温和' },
+  pony: { hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
 };
 
 const defaultFaceSelections: FaceSelections = {
@@ -116,11 +117,11 @@ const faceFeatureOptions: Record<FeatureKey, { en: string; zh: string; options: 
   },
 };
 
-const lookOptions: Record<LookKey, { src: string; en: string; zh: string; hairEn: string; hairZh: string; outfitEn: string; outfitZh: string; fame: number; pressure: number }> = {
-  natural: { src: '/looks-v14/lin-natural.png', en: 'ORIGINAL', zh: '原始造型', hairEn: 'LONG WAVES', hairZh: '自然长卷发', outfitEn: 'BLACK EVENING DRESS', outfitZh: '黑色晚礼服', fame: 0, pressure: 0 },
-  editorial: { src: '/looks-v14/lin-editorial.png', en: 'EDITORIAL', zh: '杂志造型', hairEn: 'CHIN-LENGTH BOB', hairZh: '齐下巴波波头', outfitEn: 'BURGUNDY SUIT', outfitZh: '酒红色西装', fame: 1, pressure: 1 },
-  premiere: { src: '/looks-v14/lin-premiere.png', en: 'PREMIERE', zh: '首映造型', hairEn: 'HIGH PONYTAIL', hairZh: '高马尾', outfitEn: 'ASYMMETRIC GOWN', outfitZh: '不对称礼服', fame: 2, pressure: 1 },
-  qipao: { src: '/looks-v14/lin-qipao.png', en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
+const lookOptions: Record<LookKey, { baseSrc: string; hair: HairLayerKey; en: string; zh: string; hairEn: string; hairZh: string; outfitEn: string; outfitZh: string; fame: number; pressure: number }> = {
+  natural: { baseSrc: '/avatar-layers-v17/body-face-base.png', hair: 'original', en: 'ORIGINAL', zh: '原始造型', hairEn: 'LONG WAVES', hairZh: '自然长卷发', outfitEn: 'BLACK EVENING DRESS', outfitZh: '黑色晚礼服', fame: 0, pressure: 0 },
+  editorial: { baseSrc: '/avatar-layers-v17/body-face-editorial.png', hair: 'bob', en: 'EDITORIAL', zh: '杂志造型', hairEn: 'CHIN-LENGTH BOB', hairZh: '齐下巴波波头', outfitEn: 'BURGUNDY SUIT', outfitZh: '酒红色西装', fame: 1, pressure: 1 },
+  premiere: { baseSrc: '/avatar-layers-v17/body-face-premiere.png', hair: 'pony', en: 'PREMIERE', zh: '首映造型', hairEn: 'HIGH PONYTAIL', hairZh: '高马尾', outfitEn: 'ASYMMETRIC GOWN', outfitZh: '不对称礼服', fame: 2, pressure: 1 },
+  qipao: { baseSrc: '/avatar-layers-v17/body-face-qipao.png', hair: 'qipao', en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
 };
 
 const choice01: ChoiceSet = {
@@ -416,9 +417,9 @@ export default function Home() {
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
       {screen === 'creator' && <AvatarCreatorV14 language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
-      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
+      {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -604,9 +605,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
                 })}
               </div>
             </div>
-          ) : (
-            <img key={selectedLook ?? 'natural'} className="creator-look" src={currentLook.src} alt={`Lin wearing ${currentLook.en}`} />
-          )}
+          ) : <LayeredAvatar key={selectedLook ?? 'natural'} look={selectedLook ?? 'natural'} face={selections} className="creator-look" />}
           <div className="creator-readout">
             <b>{step === 1 ? (language === 'en' ? currentFeature.en : currentFeature.zh) : (language === 'en' ? currentLook.en : currentLook.zh)}</b>
             <i>FAME +{totalFame} · PRESSURE +{totalPressure}</i>
@@ -653,7 +652,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
                   const selected = selectedLook === key;
                   return (
                     <button key={key} className={`look-card ${selected ? 'selected' : ''}`} onClick={() => chooseLook(key)} aria-pressed={selected}>
-                      <span className="look-card-art"><img src={look.src} alt="" aria-hidden="true" /></span>
+                      <span className="look-card-art"><LayeredAvatar look={key} face={selections} className="look-card-model" decorative /></span>
                       <span className="look-card-copy"><b>{language === 'en' ? look.en : look.zh}</b><small><Scissors /> {language === 'en' ? look.hairEn : look.hairZh}</small><small><Shirt /> {language === 'en' ? look.outfitEn : look.outfitZh}</small><i>FAME +{look.fame} · PRESSURE +{look.pressure}</i></span>
                       {selected && <Check className="look-check" />}
                     </button>
@@ -690,7 +689,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, lockedLook, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -698,9 +697,9 @@ function DialogueScene({ beat, language, avatar, lockedLook, index, total, backg
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} position="left" />}
-      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} position="center" />}
-      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} position="right" />}
+      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
+      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
+      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="right" />}
       {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -742,8 +741,8 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
 
 function AgentChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSet; language: Language; ready: boolean; notice: string; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const agents = [
-    { id: 'a', tone: 'david', number: '01', src: sprites.david.src, nameEn: 'DAVID CHEN', nameZh: '大卫', focusEn: 'ROLE RANGE', focusZh: '角色宽度', traitEn: 'CULTURAL UNDERSTANDING · HIGH', traitZh: '文化理解 · 高', paceEn: 'MARKET SPEED · STEADY', paceZh: '市场速度 · 稳健' },
-    { id: 'b', tone: 'claire', number: '02', src: sprites.claire.src, nameEn: 'CLAIRE BENNETT', nameZh: '克莱尔', focusEn: 'MARKET ACCESS', focusZh: '市场入口', traitEn: 'MARKET ACCESS · STRONG', traitZh: '市场资源 · 强', paceEn: 'REVISION RATE · HIGH', paceZh: '形象调整率 · 高' },
+    { id: 'a', tone: 'david', number: '01', src: sprites.david.src, nameEn: 'DAVID CHEN', nameZh: '大卫', focusEn: 'ROLE RANGE', focusZh: '角色宽度', traitEn: 'CULTURAL UNDERSTANDING · HIGH', traitZh: '文化理解 · 高', paceEn: 'MARKET SPEED · STEADY', paceZh: '市场速度 · 稳健', fame: 0, pressure: 0 },
+    { id: 'b', tone: 'claire', number: '02', src: sprites.claire.src, nameEn: 'CLAIRE BENNETT', nameZh: '克莱尔', focusEn: 'MARKET ACCESS', focusZh: '市场入口', traitEn: 'MARKET ACCESS · STRONG', traitZh: '市场资源 · 强', paceEn: 'REVISION RATE · HIGH', paceZh: '形象调整率 · 高', fame: 2, pressure: 2 },
   ];
 
   return (
@@ -768,6 +767,7 @@ function AgentChoicePanel({ set, language, ready, notice, onChoice }: { set: Cho
               <span className="agent-portrait"><img src={agent.src} alt={language === 'en' ? agent.nameEn : agent.nameZh} /></span>
               <span className="agent-focus">{language === 'en' ? agent.focusEn : agent.focusZh}</span>
               <span className="agent-traits"><b>{language === 'en' ? agent.traitEn : agent.traitZh}</b><b>{language === 'en' ? agent.paceEn : agent.paceZh}</b></span>
+              <span className="agent-impact"><small>{language === 'en' ? 'POSSIBLE CHANGE' : '可能的数值变化'}</small><b>FAME +{agent.fame}</b><b>PRESSURE +{agent.pressure}</b></span>
               {isPreset && <span className="script-preset">PRESET</span>}
             </button>
           );
@@ -822,7 +822,7 @@ function ScriptChoicePanel({ set, language, ready, notice, onChoice }: { set: Ch
   );
 }
 
-function TrainingScreen({ language, avatar, lockedLook, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
+function TrainingScreen({ language, avatar, lockedLook, lockedFace, done, setDone, soundOn, onContinue }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; done: string[]; setDone: (value: string[]) => void; soundOn: boolean; onContinue: () => void }) {
   const tokens = [
     { id: 'acting', label: 'SCENE STUDY', zh: '场景分析', result: 'FIGHT TEST READINESS: LOW', detailEn: 'ACTING +1 · fight-test readiness low', detailZh: 'ACTING +1 · 动作测试准备不足' },
     { id: 'martial', label: 'MARTIAL ARTS', zh: '武打训练', result: 'MARTIAL ARTS +1 · ACTING -1', detailEn: 'Preset route · one training slot', detailZh: '预设路线 · 唯一训练时段' },
@@ -838,7 +838,7 @@ function TrainingScreen({ language, avatar, lockedLook, done, setDone, soundOn, 
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
-      <Sprite sprite="linTraining" avatar={avatar} lockedLook={lockedLook} position="training-character" />
+      <Sprite sprite="linTraining" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="training-character" />
       <Button className="continue-button" disabled={!done.includes('martial')} onClick={onContinue}>{language === 'en' ? 'CONTINUE TO FILM RELEASE' : '进入电影上映'} <ChevronRight /></Button>
     </section>
   );
@@ -848,7 +848,7 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} position="center ending-lin" />
+      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center ending-lin" />
       <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
@@ -862,12 +862,11 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
   );
 }
 
-function Sprite({ sprite, avatar, lockedLook = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; position: string }) {
+function Sprite({ sprite, avatar, lockedLook = null, lockedFace = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; lockedFace?: FaceSelections | null; position: string }) {
   const data = sprites[sprite];
   if (sprite.startsWith('lin') && lockedLook) {
     const look = lookOptions[lockedLook];
-    const src = lockedLook === 'qipao' && sprite === 'linDragonBack' ? sprites.linDragonBack.src : look.src;
-    return <img className={`character-sprite ${position}`} src={src} alt={`Lin · ${look.en}`} />;
+    return <LayeredAvatar look={lockedLook} face={lockedFace} className={`character-sprite ${position}`} label={`Lin · ${look.en}`} />;
   }
   const useScenePose = avatar === 'original' && ['linGraduation', 'linDragon', 'linDragonBack', 'linTraining'].includes(sprite);
   if (sprite.startsWith('lin') && !useScenePose) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
@@ -876,7 +875,39 @@ function Sprite({ sprite, avatar, lockedLook = null, position }: { sprite: Sprit
 
 function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string }) {
   const option = avatarOptions[avatar];
-  return <img className={className} src={option.src} alt={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
+  return <LayeredAvatar hair={avatar} className={className} label={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
+}
+
+function LayeredAvatar({ hair = 'original', look, face = null, className, label = 'Lin', decorative = false }: { hair?: HairLayerKey; look?: LookKey; face?: FaceSelections | null; className: string; label?: string; decorative?: boolean }) {
+  const resolvedLook = look ? lookOptions[look] : null;
+  const hairKey = resolvedLook?.hair ?? hair;
+  const baseSrc = resolvedLook?.baseSrc ?? '/avatar-layers-v17/body-face-base.png';
+  const roleProps = decorative ? { 'aria-hidden': true as const } : { role: 'img', 'aria-label': label };
+  return (
+    <span className={`avatar-stack ${className}`} data-look={look ?? 'natural'} data-hair={hairKey} {...roleProps}>
+      <img className="avatar-layer avatar-layer-back" src={`/avatar-layers-v17/hair-back-${hairKey}.png`} alt="" aria-hidden="true" />
+      <img className="avatar-layer avatar-layer-base" src={baseSrc} alt="" aria-hidden="true" />
+      <FaceProfileLayer face={face} look={look ?? 'natural'} />
+      <img className="avatar-layer avatar-layer-front" src={`/avatar-layers-v17/hair-front-${hairKey}.png`} alt="" aria-hidden="true" />
+    </span>
+  );
+}
+
+function FaceProfileLayer({ face, look }: { face: FaceSelections | null; look: LookKey }) {
+  if (!face) return null;
+  const anchor = look === 'qipao' ? { x: 290, y: 103, rx: 48, ry: 66 } : look === 'natural' ? { x: 256, y: 126, rx: 43, ry: 60 } : { x: 256, y: 105, rx: 42, ry: 57 };
+  const eyeY = anchor.y - 13;
+  const cheekY = anchor.y + 8;
+  const tone = face.skin === 'porcelain' ? '#f9e5d7' : face.skin === 'deep' ? '#c79464' : 'transparent';
+  return (
+    <svg className="avatar-layer avatar-face-profile" viewBox="0 0 512 1280" aria-hidden="true">
+      {tone !== 'transparent' && <ellipse cx={anchor.x} cy={anchor.y} rx={anchor.rx} ry={anchor.ry} fill={tone} opacity={face.skin === 'porcelain' ? '.2' : '.16'} />}
+      {face.eyes === 'coded' && <g className="face-mark face-mark-eyes" fill="none" stroke="#30211f" strokeWidth="2.2" strokeLinecap="round"><path d={`M ${anchor.x - 34} ${eyeY} Q ${anchor.x - 19} ${eyeY - 4} ${anchor.x - 7} ${eyeY - 1}`} /><path d={`M ${anchor.x + 7} ${eyeY - 1} Q ${anchor.x + 19} ${eyeY - 4} ${anchor.x + 34} ${eyeY}`} /></g>}
+      {face.cheekbones === 'high' && <g className="face-mark" fill="none" stroke="#8f6256" strokeWidth="1.5" strokeLinecap="round" opacity=".72"><path d={`M ${anchor.x - 34} ${cheekY} l 10 5`} /><path d={`M ${anchor.x + 34} ${cheekY} l -10 5`} /></g>}
+      {face.nose === 'rounded' && <path className="face-mark" d={`M ${anchor.x - 6} ${anchor.y + 6} Q ${anchor.x} ${anchor.y + 11} ${anchor.x + 6} ${anchor.y + 6}`} fill="none" stroke="#70473d" strokeWidth="1.5" strokeLinecap="round" opacity=".72" />}
+      {face.jaw === 'long-square' && <path className="face-mark" d={`M ${anchor.x - 31} ${anchor.y + 30} Q ${anchor.x - 25} ${anchor.y + 51} ${anchor.x - 13} ${anchor.y + 57} L ${anchor.x + 13} ${anchor.y + 57} Q ${anchor.x + 25} ${anchor.y + 51} ${anchor.x + 31} ${anchor.y + 30}`} fill="none" stroke="#523b39" strokeWidth="1.35" opacity=".6" />}
+    </svg>
+  );
 }
 
 function ProjectCards() {
