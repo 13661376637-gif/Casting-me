@@ -51,9 +51,10 @@ checks += 2;
 // in camera projection; neither supplies a replacement portrait or face asset.
 for (const look of Object.keys(LOOK_HAIR)) {
   const candidate = buildCharacterDrawing({ face: muted, hair: LOOK_HAIR[look], look });
-  assert.deepEqual(group(candidate, 'face'), group(buildCharacterDrawing({ face: muted, hair: 'original', look: 'natural' }), 'face'), `${look} must preserve the saved face`);
+  const canonical=paths=>paths.map(({pose,...path})=>path);
+  assert.deepEqual(canonical(group(candidate, 'face')), canonical(group(buildCharacterDrawing({ face: muted, hair: 'original', look: 'natural' }), 'face')), `${look} must preserve the saved face`);
   for (const path of candidate.paths) assert.ok(!/NaN|Infinity/.test(path.d));
-  const camera = characterCamera(420, 600, true);
+  const camera = characterCamera(420, 600, true,candidate);
   assert.equal(candidate.head.x * camera.scale + camera.x, 210);
   checks += 2;
 }

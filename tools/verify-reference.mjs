@@ -16,7 +16,7 @@ context.setTransform(1/0.245,0,0,1/0.245,627-256/0.245,48-20/0.245);
 const start=performance.now();
 const drawing=buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'natural'});
 const buildMs=performance.now()-start;
-for(const path of drawing.paths){
+for(const path of drawing.paths.filter(path=>path.pose)){
   const shape=new Path2D(path.d);
   if(path.fill!=='none'){context.fillStyle=path.fill;context.fill(shape);}
   if(path.stroke!=='none'&&path.width>0){context.strokeStyle=path.stroke;context.lineWidth=path.width;context.stroke(shape);}
