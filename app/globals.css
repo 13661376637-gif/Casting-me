@@ -129,13 +129,11 @@ button { font: inherit; }
 
 /* Characters */
 .character-sprite { position:absolute; z-index:5; bottom:-8%; max-width:none; height:min(82vh,900px); object-fit:contain; object-position:bottom; filter:drop-shadow(10px 14px 9px rgba(18,25,35,.3)); user-select:none; pointer-events:none; transition:opacity .2s ease; animation:sprite-in .24s ease both; }
-.avatar-stack { position:relative; display:block; width:auto; aspect-ratio:512 / 1280; }
-.avatar-stack .avatar-layer { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:bottom; pointer-events:none; user-select:none; }
-.avatar-stack .avatar-layer-back { z-index:1; }
-.avatar-stack .avatar-layer-base { z-index:2; }
-.avatar-stack .avatar-face-profile { z-index:3; overflow:visible; }
-.avatar-stack .avatar-layer-front { z-index:4; }
-.avatar-stack.avatar-thumb { width:62px; height:94px; }
+.character-canvas { display:block; user-select:none; }
+.full-character-canvas { width:auto; aspect-ratio:512 / 1280; }
+.portrait-canvas { position:absolute; inset:0; width:100%; height:100%; }
+.editable-character-canvas { touch-action:none; cursor:ew-resize; }
+.editable-character-canvas:focus-visible { outline:2px dashed #ed5c90; outline-offset:-4px; }
 .character-sprite.left { left:clamp(-80px,2vw,28px); }
 .character-sprite.right { right:clamp(-80px,2vw,28px); transform:scaleX(-1); }
 .character-sprite.center { left:50%; transform:translateX(-50%); }
@@ -212,7 +210,6 @@ button { font: inherit; }
 .creator-card { height:min(760px,calc(100svh - 104px)); min-height:630px; }
 .creator-controls { overflow-y:auto; scrollbar-width:thin; scrollbar-color:#a8325d #d8d2df; }
 .creator-look { position:absolute; left:50%; bottom:-6%; height:94%; max-width:none; transform:translateX(-50%); filter:drop-shadow(9px 12px 8px rgba(18,27,38,.28)); animation:sprite-in .24s ease both; }
-.face-closeup.tone-porcelain img { filter:brightness(1.07) saturate(.78); }
 .bias-rule { margin-bottom:11px; border-color:#a8325d; background:#eed7df; }
 .bias-rule span { background:#a8325d; }
 .face-tool-hotspots { position:absolute; inset:0; z-index:6; pointer-events:none; }

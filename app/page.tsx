@@ -21,15 +21,13 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CharacterCanvas } from '@/components/character-canvas';
+import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance } from '@/lib/avatar-model';
+import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as FeatureKey, FaceSelections, CharacterAppearance } from '@/lib/avatar-model';
 
 type Language = 'en' | 'zh';
 type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
 type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'linGraduation' | 'richard' | 'david' | 'claire' | 'maya';
-type AvatarKey = 'original' | 'sleek' | 'bob' | 'pony';
-type LookKey = 'natural' | 'editorial' | 'premiere' | 'qipao';
-type HairLayerKey = AvatarKey | 'qipao';
-type FeatureKey = 'eyes' | 'cheekbones' | 'nose' | 'skin' | 'jaw';
-type FaceSelections = Record<FeatureKey, string>;
 
 type FaceOption = {
   id: string;
@@ -60,12 +58,12 @@ type Beat = {
 };
 
 const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolean }> = {
-  linNatural: { src: '/characters/lin-natural-front-sheet.png', name: 'Lin', frontCrop: true },
-  linDragon: { src: '/characters/lin-dragon.png', name: 'Lin — Night Orchid look' },
-  linDragonBack: { src: '/characters/lin-dragon-back.png', name: 'Lin — Night Orchid look, rear pose' },
-  linTraining: { src: '/characters/lin-training.png', name: 'Lin — Night Orchid fight training' },
-  linPorcelain: { src: '/characters/lin-porcelain.png', name: 'Lin — Porcelain Light look' },
-  linGraduation: { src: '/characters/lin-graduation.png', name: 'Lin at graduation' },
+  linNatural: { src: '', name: 'Lin' },
+  linDragon: { src: '', name: 'Lin — Night Orchid look' },
+  linDragonBack: { src: '', name: 'Lin — Night Orchid look, rear pose' },
+  linTraining: { src: '', name: 'Lin — Night Orchid fight training' },
+  linPorcelain: { src: '', name: 'Lin — Porcelain Light look' },
+  linGraduation: { src: '', name: 'Lin at graduation' },
   richard: { src: '/characters/richard.png', name: 'Richard Cole' },
   david: { src: '/characters/david.png', name: 'David Miller' },
   claire: { src: '/characters/claire.png', name: 'Claire Bennett' },
@@ -79,9 +77,7 @@ const avatarOptions: Record<AvatarKey, { hairEn: string; hairZh: string; faceEn:
   pony: { hairEn: 'PONYTAIL', hairZh: '高马尾', faceEn: 'FOCUSED', faceZh: '坚定' },
 };
 
-const defaultFaceSelections: FaceSelections = {
-  eyes: 'natural', cheekbones: 'soft', nose: 'defined', skin: 'original', jaw: 'oval',
-};
+const defaultFaceSelections = DEFAULT_FACE;
 
 const faceFeatureOptions: Record<FeatureKey, { en: string; zh: string; options: FaceOption[] }> = {
   eyes: {
@@ -117,11 +113,11 @@ const faceFeatureOptions: Record<FeatureKey, { en: string; zh: string; options: 
   },
 };
 
-const lookOptions: Record<LookKey, { baseSrc: string; hair: HairLayerKey; en: string; zh: string; hairEn: string; hairZh: string; outfitEn: string; outfitZh: string; fame: number; pressure: number }> = {
-  natural: { baseSrc: '/avatar-layers-v17/body-face-base.png', hair: 'original', en: 'ORIGINAL', zh: '原始造型', hairEn: 'LONG WAVES', hairZh: '自然长卷发', outfitEn: 'BLACK EVENING DRESS', outfitZh: '黑色晚礼服', fame: 0, pressure: 0 },
-  editorial: { baseSrc: '/avatar-layers-v17/body-face-editorial.png', hair: 'bob', en: 'EDITORIAL', zh: '杂志造型', hairEn: 'CHIN-LENGTH BOB', hairZh: '齐下巴波波头', outfitEn: 'BURGUNDY SUIT', outfitZh: '酒红色西装', fame: 1, pressure: 1 },
-  premiere: { baseSrc: '/avatar-layers-v17/body-face-premiere.png', hair: 'pony', en: 'PREMIERE', zh: '首映造型', hairEn: 'HIGH PONYTAIL', hairZh: '高马尾', outfitEn: 'ASYMMETRIC GOWN', outfitZh: '不对称礼服', fame: 2, pressure: 1 },
-  qipao: { baseSrc: '/avatar-layers-v17/body-face-qipao.png', hair: 'qipao', en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
+const lookOptions: Record<LookKey, { en: string; zh: string; hairEn: string; hairZh: string; outfitEn: string; outfitZh: string; fame: number; pressure: number }> = {
+  natural: { en: 'ORIGINAL', zh: '原始造型', hairEn: 'LONG WAVES', hairZh: '自然长卷发', outfitEn: 'BLACK EVENING DRESS', outfitZh: '黑色晚礼服', fame: 0, pressure: 0 },
+  editorial: { en: 'EDITORIAL', zh: '杂志造型', hairEn: 'CHIN-LENGTH BOB', hairZh: '齐下巴波波头', outfitEn: 'BURGUNDY SUIT', outfitZh: '酒红色西装', fame: 1, pressure: 1 },
+  premiere: { en: 'PREMIERE', zh: '首映造型', hairEn: 'HIGH PONYTAIL', hairZh: '高马尾', outfitEn: 'ASYMMETRIC GOWN', outfitZh: '不对称礼服', fame: 2, pressure: 1 },
+  qipao: { en: 'NIGHT ORCHID', zh: '夜兰造型', hairEn: 'SCULPTED WAVES', hairZh: '定型长卷发', outfitEn: 'BLACK QIPAO · RED TRIM', outfitZh: '黑色旗袍 · 红色滚边', fame: 4, pressure: 3 },
 };
 
 const choice01: ChoiceSet = {
@@ -319,9 +315,10 @@ export default function Home() {
   const [resolved, setResolved] = useState<string[]>([]);
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
-  const [avatar, setAvatar] = useState<AvatarKey>('original');
-  const [lockedLook, setLockedLook] = useState<LookKey | null>(null);
-  const [lockedFace, setLockedFace] = useState<FaceSelections | null>(null);
+  const [appearance, setAppearance] = useState<CharacterAppearance | null>(null);
+  const avatar: AvatarKey = appearance?.hair ?? 'original';
+  const lockedLook = appearance?.look ?? null;
+  const lockedFace = appearance?.face ?? null;
 
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
@@ -376,18 +373,15 @@ export default function Home() {
   };
 
   const restart = () => {
-    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAvatar('original'); setLockedLook(null); setLockedFace(null);
-    try { window.localStorage.removeItem('casting-me-market-look'); window.localStorage.removeItem('casting-me-face'); } catch { /* The fresh in-session state is already reset. */ }
+    setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAppearance(null);
+    try { window.localStorage.removeItem('casting-me-character-v18'); } catch { /* The fresh in-session state is already reset. */ }
   };
 
   const confirmAvatar = (faceFame: number, facePressure: number, look: LookKey, face: FaceSelections) => {
-    setAvatar('original');
-    setLockedLook(look);
-    setLockedFace(face);
+    const character = lockAppearance(look, face);
+    setAppearance(character);
     try {
-      window.localStorage.setItem('casting-me-avatar', 'original');
-      window.localStorage.setItem('casting-me-market-look', look);
-      window.localStorage.setItem('casting-me-face', JSON.stringify(face));
+      window.localStorage.setItem('casting-me-character-v18', JSON.stringify(character));
     } catch { /* Keep the in-session selection. */ }
     if (!resolved.includes('face-custom-v14')) {
       const lookScore = lookOptions[look];
@@ -415,7 +409,7 @@ export default function Home() {
       <GameTopbar screen={screen} progress={progress} language={language} setLanguage={setLanguage} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
-      {screen === 'creator' && <AvatarCreatorV14 language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
+      {screen === 'creator' && <AvatarCreator language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
       {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
       {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} onRestart={restart} />}
@@ -458,93 +452,8 @@ function TitleScreen({ language, avatar, onStart }: { language: Language; avatar
   );
 }
 
-function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: () => void }) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [appliedTools, setAppliedTools] = useState<string[]>([]);
-  const [showAfter, setShowAfter] = useState(false);
-  const [lookApplied, setLookApplied] = useState(false);
-  const tools = [
-    { id: 'eyes', Icon: Eye, en: 'EYE SHAPE', zh: '眼型' },
-    { id: 'nose', Icon: MoveHorizontal, en: 'NOSE BRIDGE', zh: '鼻梁' },
-    { id: 'lips', Icon: Smile, en: 'LIP LINE', zh: '唇形' },
-    { id: 'contour', Icon: ScanFace, en: 'CONTOUR', zh: '轮廓' },
-  ];
-  const faceReady = appliedTools.length === tools.length;
-  const useTool = (id: string, index: number) => {
-    ping(soundOn, 520 + index * 55);
-    setShowAfter(true);
-    setAppliedTools((current) => current.includes(id) ? current : [...current, id]);
-  };
-  const applyLook = () => {
-    ping(soundOn, 690);
-    setLookApplied(true);
-  };
-  return (
-    <section className="creator-screen stage-screen">
-      <div className={`creator-card creator-step-${step}`}>
-        <div className="creator-preview">
-          <span>{step === 1 ? 'PLAYER MODEL · FACE ALIGNMENT' : 'PLAYER MODEL · LOOK PREVIEW'}</span>
-          {step === 1 ? (
-            <div className="face-closeup">
-              <img key={showAfter ? 'after' : 'before'} src={showAfter ? '/face-customizer/lin-face-after.png' : '/face-customizer/lin-face-before.png'} alt={showAfter ? 'Lin after facial adjustment' : 'Lin before facial adjustment'} />
-              <i className="face-guide face-guide-eyes" aria-hidden="true" />
-              <i className="face-guide face-guide-nose" aria-hidden="true" />
-              <i className="face-guide face-guide-mouth" aria-hidden="true" />
-            </div>
-          ) : lookApplied ? (
-            <img className="creator-qipao" src="/characters/lin-dragon.png" alt="Lin wearing the Night Orchid qipao look" />
-          ) : (
-            <AvatarArt avatar="original" className="creator-avatar" />
-          )}
-          <div className="creator-readout">
-            <b>{step === 1 ? (showAfter ? 'AFTER · 调整后' : 'BEFORE · 原始') : (lookApplied ? 'NIGHT ORCHID · 夜兰' : 'ORIGINAL LOOK · 初始造型')}</b>
-            <i>{step === 1 ? `${appliedTools.length} / ${tools.length} TOOLS` : (lookApplied ? 'HAIR + QIPAO LOCKED' : 'AWAITING WARDROBE')}</i>
-          </div>
-        </div>
-        <div className="creator-controls">
-          <p>CHOICE 03 · COSMETIC PRESET · STEP {step} / 2</p>
-          <h2>{step === 1 ? (language === 'en' ? 'ADJUST THE FACE' : '调整面部') : (language === 'en' ? 'LOCK THE LOOK' : '锁定造型')}</h2>
-          <div className="creator-rule"><span>{language === 'en' ? 'LOCKED' : '固定'}</span><b>{language === 'en' ? 'IDENTITY · SKIN TONE · BODY' : '人物身份 · 肤色 · 身体'}</b></div>
-          {step === 1 ? (
-            <>
-              <div className="face-compare" aria-label="Compare before and after">
-                <button className={!showAfter ? 'selected' : ''} onClick={() => setShowAfter(false)}>BEFORE <small>原始</small></button>
-                <button className={showAfter ? 'selected' : ''} onClick={() => setShowAfter(true)}>AFTER <small>调整后</small></button>
-              </div>
-              <h3>{language === 'en' ? 'SELECT EACH TOOL TO APPLY' : '逐项点击工具进行调整'}</h3>
-              <div className="face-tools">
-                {tools.map(({ id, Icon, en, zh }, index) => {
-                  const applied = appliedTools.includes(id);
-                  return (
-                    <button key={id} className={applied ? 'applied' : ''} onClick={() => useTool(id, index)} aria-pressed={applied}>
-                      <span><Icon /></span><b>{language === 'en' ? en : zh}</b>{applied && <Check />}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="creator-note">{language === 'en' ? 'Each tool updates the same face. Use BEFORE / AFTER to compare without changing Lin’s skin tone or identity.' : '每件工具都作用于同一张脸；可用“原始 / 调整后”反复对比，肤色与人物身份保持不变。'}</p>
-              <Button className="confirm-avatar-button" disabled={!faceReady} onClick={() => { ping(soundOn, 620); setShowAfter(true); setStep(2); }}>{language === 'en' ? 'NEXT · HAIR & WARDROBE' : '下一步 · 发型与服装'} <ChevronRight /></Button>
-            </>
-          ) : (
-            <>
-              <button className="creator-back" onClick={() => setStep(1)}><ArrowLeft /> {language === 'en' ? 'FACE TOOLS' : '返回面部工具'}</button>
-              <h3>{language === 'en' ? 'HAIR + WARDROBE PRESET' : '发型 + 服装预设'}</h3>
-              <button className={`look-preset ${lookApplied ? 'selected' : ''}`} onClick={applyLook} aria-pressed={lookApplied}>
-                <span className="look-preset-art"><img src="/characters/lin-dragon.png" alt="" aria-hidden="true" /></span>
-                <span className="look-preset-copy"><b>{language === 'en' ? 'NIGHT ORCHID' : '夜兰造型'}</b><small><Scissors /> {language === 'en' ? 'SCULPTED WAVES' : '定型长卷发'}</small><small><Shirt /> {language === 'en' ? 'BLACK QIPAO · RED TRIM' : '黑色旗袍 · 红色滚边'}</small></span>
-                {lookApplied && <Check className="look-check" />}
-              </button>
-              <p className="creator-note">{language === 'en' ? 'The adjusted face, hairstyle and qipao become Lin’s locked appearance and remain visible through the ending.' : '调整后的面部、发型与旗袍将成为主角的锁定形象，并一直保留到游戏结局。'}</p>
-              <Button className="confirm-avatar-button" disabled={!lookApplied} onClick={onConfirm}>{language === 'en' ? 'SAVE FINAL LOOK · +2 / +2' : '保存最终造型 · +2 / +2'} <ChevronRight /></Button>
-            </>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: (fame: number, pressure: number, look: LookKey, face: FaceSelections) => void }) {
+function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: (fame: number, pressure: number, look: LookKey, face: FaceSelections) => void }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [activeTool, setActiveTool] = useState<FeatureKey>('eyes');
   const [visitedTools, setVisitedTools] = useState<FeatureKey[]>([]);
@@ -562,10 +471,6 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
     const selected = faceFeatureOptions[key].options.find((option) => option.id === selections[key])!;
     return { fame: score.fame + selected.fame, pressure: score.pressure + selected.pressure };
   }, { fame: 0, pressure: 0 });
-  const codedLevel = faceKeys.filter((key) => key !== 'skin' && faceFeatureOptions[key].options.find((option) => option.id === selections[key])?.coded).length;
-  const faceSrc = selections.skin === 'deep'
-    ? (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-deep.jpg' : '/face-customizer-v14/lin-face-natural-deep.jpg')
-    : (codedLevel >= 3 ? '/face-customizer-v14/lin-face-coded-high-pale.jpg' : codedLevel >= 1 ? '/face-customizer-v14/lin-face-coded-mid.jpg' : '/face-customizer-v14/lin-face-natural.jpg');
   const currentFeature = faceFeatureOptions[activeTool];
   const currentLook = lookOptions[selectedLook ?? 'natural'];
   const totalFame = faceScore.fame + (selectedLook ? currentLook.fame : 0);
@@ -578,8 +483,12 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
   };
   const selectFaceOption = (option: FaceOption) => {
     ping(soundOn, 620);
-    setSelections((current) => ({ ...current, [activeTool]: option.id }));
+    setSelections((current) => applyFaceOption(current, activeTool, option.id));
     setVisitedTools((current) => current.includes(activeTool) ? current : [...current, activeTool]);
+  };
+  const adjustWithTool = (feature: FeatureKey, value: number) => {
+    setSelections(current => adjustFace(current, feature, value));
+    setVisitedTools(current => current.includes(feature) ? current : [...current, feature]);
   };
   const chooseLook = (look: LookKey) => {
     ping(soundOn, 690);
@@ -592,8 +501,8 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
         <div className="creator-preview">
           <span>{step === 1 ? 'PLAYER MODEL · INTERACTIVE FACE TOOLS' : 'PLAYER MODEL · LOOK PREVIEW'}</span>
           {step === 1 ? (
-            <div className={`face-closeup ${selections.skin === 'porcelain' ? 'tone-porcelain' : ''}`}>
-              <img key={`${faceSrc}-${selections.skin}`} src={faceSrc} alt="Lin face preview with the selected casting adjustments" />
+            <div className="face-closeup">
+              <CharacterCanvas portrait face={selections} activeTool={activeTool} onAdjust={adjustWithTool} label={language === 'en' ? `${currentFeature.en} · Drag left or right, or use arrow keys` : `${currentFeature.zh} · 左右拖动调整，也可使用方向键`} />
               <i className="face-guide face-guide-eyes" aria-hidden="true" />
               <i className="face-guide face-guide-nose" aria-hidden="true" />
               <i className="face-guide face-guide-mouth" aria-hidden="true" />
@@ -605,7 +514,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
                 })}
               </div>
             </div>
-          ) : <LayeredAvatar key={selectedLook ?? 'natural'} look={selectedLook ?? 'natural'} face={selections} className="creator-look" />}
+          ) : <CharacterCanvas look={selectedLook ?? 'natural'} face={selections} className="creator-look" />}
           <div className="creator-readout">
             <b>{step === 1 ? (language === 'en' ? currentFeature.en : currentFeature.zh) : (language === 'en' ? currentLook.en : currentLook.zh)}</b>
             <i>FAME +{totalFame} · PRESSURE +{totalPressure}</i>
@@ -640,7 +549,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
                 </div>
               </div>
               <div className="creator-score"><span>{language === 'en' ? 'FACE SCORE' : '面部数值'}</span><b>FAME +{faceScore.fame}</b><b>PRESSURE +{faceScore.pressure}</b><i>{visitedTools.length} / {toolRows.length} TOOLS</i></div>
-              <p className="creator-note">{language === 'en' ? 'These are casting-system labels, not beauty standards. Touch every tool, then decide how much of the industry shorthand Lin accepts.' : '这些是选角系统施加的标签，不是审美标准。请操作每件工具，再决定林接受多少行业速记。'}</p>
+              <p className="creator-note">{language === 'en' ? 'Select a tool, then drag left / right on the face to adjust, or choose a preset. These are casting-system labels, not beauty standards.' : '选择工具后，在脸部左右拖动微调，也可点击预设。这些是选角系统施加的标签，不是审美标准。'}</p>
               <Button className="confirm-avatar-button" disabled={!faceReady} onClick={() => { ping(soundOn, 620); setStep(2); }}>{language === 'en' ? 'NEXT · HAIR & WARDROBE' : '下一步 · 发型与服装'} <ChevronRight /></Button>
             </>
           ) : (
@@ -652,7 +561,7 @@ function AvatarCreatorV14({ language, soundOn, onConfirm }: { language: Language
                   const selected = selectedLook === key;
                   return (
                     <button key={key} className={`look-card ${selected ? 'selected' : ''}`} onClick={() => chooseLook(key)} aria-pressed={selected}>
-                      <span className="look-card-art"><LayeredAvatar look={key} face={selections} className="look-card-model" decorative /></span>
+                      <span className="look-card-art"><CharacterCanvas look={key} face={selections} className="look-card-model" decorative /></span>
                       <span className="look-card-copy"><b>{language === 'en' ? look.en : look.zh}</b><small><Scissors /> {language === 'en' ? look.hairEn : look.hairZh}</small><small><Shirt /> {language === 'en' ? look.outfitEn : look.outfitZh}</small><i>FAME +{look.fame} · PRESSURE +{look.pressure}</i></span>
                       {selected && <Check className="look-check" />}
                     </button>
@@ -864,50 +773,15 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
 
 function Sprite({ sprite, avatar, lockedLook = null, lockedFace = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; lockedFace?: FaceSelections | null; position: string }) {
   const data = sprites[sprite];
-  if (sprite.startsWith('lin') && lockedLook) {
-    const look = lookOptions[lockedLook];
-    return <LayeredAvatar look={lockedLook} face={lockedFace} className={`character-sprite ${position}`} label={`Lin · ${look.en}`} />;
+  if (sprite.startsWith('lin')) {
+    return <CharacterCanvas look={lockedLook ?? 'natural'} hair={avatar} face={lockedFace} graduation={!lockedLook && sprite === 'linGraduation'} className={`character-sprite ${position}`} label={data.name} />;
   }
-  const useScenePose = avatar === 'original' && ['linGraduation', 'linDragon', 'linDragonBack', 'linTraining'].includes(sprite);
-  if (sprite.startsWith('lin') && !useScenePose) return <AvatarArt avatar={avatar} className={`character-sprite ${position}`} />;
   return <img className={`character-sprite ${position}`} src={data.src} alt={data.name} />;
 }
 
 function AvatarArt({ avatar, className }: { avatar: AvatarKey; className: string }) {
   const option = avatarOptions[avatar];
-  return <LayeredAvatar hair={avatar} className={className} label={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
-}
-
-function LayeredAvatar({ hair = 'original', look, face = null, className, label = 'Lin', decorative = false }: { hair?: HairLayerKey; look?: LookKey; face?: FaceSelections | null; className: string; label?: string; decorative?: boolean }) {
-  const resolvedLook = look ? lookOptions[look] : null;
-  const hairKey = resolvedLook?.hair ?? hair;
-  const baseSrc = resolvedLook?.baseSrc ?? '/avatar-layers-v17/body-face-base.png';
-  const roleProps = decorative ? { 'aria-hidden': true as const } : { role: 'img', 'aria-label': label };
-  return (
-    <span className={`avatar-stack ${className}`} data-look={look ?? 'natural'} data-hair={hairKey} {...roleProps}>
-      <img className="avatar-layer avatar-layer-back" src={`/avatar-layers-v17/hair-back-${hairKey}.png`} alt="" aria-hidden="true" />
-      <img className="avatar-layer avatar-layer-base" src={baseSrc} alt="" aria-hidden="true" />
-      <FaceProfileLayer face={face} look={look ?? 'natural'} />
-      <img className="avatar-layer avatar-layer-front" src={`/avatar-layers-v17/hair-front-${hairKey}.png`} alt="" aria-hidden="true" />
-    </span>
-  );
-}
-
-function FaceProfileLayer({ face, look }: { face: FaceSelections | null; look: LookKey }) {
-  if (!face) return null;
-  const anchor = look === 'qipao' ? { x: 290, y: 103, rx: 48, ry: 66 } : look === 'natural' ? { x: 256, y: 126, rx: 43, ry: 60 } : { x: 256, y: 105, rx: 42, ry: 57 };
-  const eyeY = anchor.y - 13;
-  const cheekY = anchor.y + 8;
-  const tone = face.skin === 'porcelain' ? '#f9e5d7' : face.skin === 'deep' ? '#c79464' : 'transparent';
-  return (
-    <svg className="avatar-layer avatar-face-profile" viewBox="0 0 512 1280" aria-hidden="true">
-      {tone !== 'transparent' && <ellipse cx={anchor.x} cy={anchor.y} rx={anchor.rx} ry={anchor.ry} fill={tone} opacity={face.skin === 'porcelain' ? '.2' : '.16'} />}
-      {face.eyes === 'coded' && <g className="face-mark face-mark-eyes" fill="none" stroke="#30211f" strokeWidth="2.2" strokeLinecap="round"><path d={`M ${anchor.x - 34} ${eyeY} Q ${anchor.x - 19} ${eyeY - 4} ${anchor.x - 7} ${eyeY - 1}`} /><path d={`M ${anchor.x + 7} ${eyeY - 1} Q ${anchor.x + 19} ${eyeY - 4} ${anchor.x + 34} ${eyeY}`} /></g>}
-      {face.cheekbones === 'high' && <g className="face-mark" fill="none" stroke="#8f6256" strokeWidth="1.5" strokeLinecap="round" opacity=".72"><path d={`M ${anchor.x - 34} ${cheekY} l 10 5`} /><path d={`M ${anchor.x + 34} ${cheekY} l -10 5`} /></g>}
-      {face.nose === 'rounded' && <path className="face-mark" d={`M ${anchor.x - 6} ${anchor.y + 6} Q ${anchor.x} ${anchor.y + 11} ${anchor.x + 6} ${anchor.y + 6}`} fill="none" stroke="#70473d" strokeWidth="1.5" strokeLinecap="round" opacity=".72" />}
-      {face.jaw === 'long-square' && <path className="face-mark" d={`M ${anchor.x - 31} ${anchor.y + 30} Q ${anchor.x - 25} ${anchor.y + 51} ${anchor.x - 13} ${anchor.y + 57} L ${anchor.x + 13} ${anchor.y + 57} Q ${anchor.x + 25} ${anchor.y + 51} ${anchor.x + 31} ${anchor.y + 30}`} fill="none" stroke="#523b39" strokeWidth="1.35" opacity=".6" />}
-    </svg>
-  );
+  return <CharacterCanvas hair={avatar} className={className} label={`Lin · ${option.hairEn} · ${option.faceEn}`} />;
 }
 
 function ProjectCards() {
