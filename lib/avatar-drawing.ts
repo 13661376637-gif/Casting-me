@@ -1,4 +1,5 @@
 import type { AvatarHair, AvatarLook, FaceSelections } from './avatar-model';
+import reference from './avatar-reference.json' with { type: 'json' };
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.
 // No raster image is loaded, clipped or painted by the protagonist renderer.
@@ -11,39 +12,83 @@ const mix = (a: string, b: string, t: number) => {
   return `rgb(${channels.join(',')})`;
 };
 
+const referenceCache = new Map<string, PaintPath[]>();
+const compiledPaths = new WeakMap<PaintPath, Map<typeof Path2D, Path2D>>();
+const featureValue = (face: FaceSelections, key: string) => {
+  const defaults: Record<string,string> = {eyes:'natural',cheekbones:'soft',nose:'defined',skin:'original',jaw:'oval'};
+  const amount = face.adjustments?.[key as 'eyes'];
+  return typeof amount === 'number' && Number.isFinite(amount) ? Math.max(0,Math.min(1,amount)) : face[key as 'eyes'] === defaults[key] ? 0 : 1;
+};
+
+// Traced closed contours preserve the supplied drawing's actual hair strands,
+// eyelids, irises and painted tones. Every vertex remains editable; there is no
+// bitmap, replacement portrait, texture upload, or drawImage call at runtime.
+function referenceHead(face: FaceSelections, hair: AvatarHair): PaintPath[] {
+  const eyes=featureValue(face,'eyes'), cheeks=featureValue(face,'cheekbones'), nose=featureValue(face,'nose'), jaw=featureValue(face,'jaw'), tone=featureValue(face,'skin');
+  const key=JSON.stringify([eyes,cheeks,nose,jaw,tone,face.skin,hair]);
+  const cached=referenceCache.get(key);if(cached)return cached;
+  const scale=0.245, grid=reference.referenceSize/reference.size;
+  const field=(x:number,y:number,cx:number,cy:number,rx:number,ry:number)=>Math.max(0,1-((x-cx)/rx)**2-((y-cy)/ry)**2)**2;
+  const transform=(gx:number,gy:number,group:number)=>{
+    let x=gx*grid,y=gy*grid;
+    if(group===0){
+      const eyeField=field(x,y,520,520,90,95)+field(x,y,738,520,90,95);
+      y+=eyes*(538-y)*0.36*eyeField;
+      const noseField=field(x,y,627,645,76,90);
+      x+=(x-627)*nose*0.23*noseField;y-=nose*4*noseField;
+      const cheekField=field(x,y,468,627,65,95)+field(x,y,786,627,65,95);
+      x+=Math.sign(x-627)*cheeks*10*cheekField;y-=cheeks*11*cheekField;
+      const lower=Math.max(0,Math.min(1,(y-661)/180));
+      x+=Math.sign(x-627)*jaw*13*field(x,y,627,743,200,125);
+      y+=jaw*8*lower;
+    }
+    if(group===1){
+      if(hair==='bob')y=650+(y-650)*0.44;
+      if(hair==='pony'){
+        if(x<627)y=650+(y-650)*0.18;
+        else {x=833+(x-833)*0.58;y=650+(y-650)*1.3;}
+      }
+    }
+    return [Math.round((256+(x-627)*scale)*100)/100,Math.round((20+(y-48)*scale)*100)/100];
+  };
+  const groupNames=['face','hair-back','reference-neck','jewelry','hair-front'];
+  const paths:PaintPath[]=[];
+  const contourPath=(loops:number[][],group:number)=>loops.map(loop=>{
+    const points=[];
+    for(let i=0;i<loop.length;i+=2){const [x,y]=transform(loop[i],loop[i+1],group);points.push(`${i?'L':'M'}${x} ${y}`);}
+    return points.join('')+'Z';
+  }).join('');
+  for(const shape of reference.silhouettes){
+    const fill=shape.group===1||shape.group===4?'#222220':shape.group===3?'#b8b5ad':mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',tone);
+    paths.push({d:contourPath(shape.loops,shape.group),fill,stroke:'none',width:0,group:groupNames[shape.group]});
+  }
+  const orderedContours=[...reference.contours].sort((a,b)=>reference.palette[b.color].reduce((n,c)=>n+c,0)-reference.palette[a.color].reduce((n,c)=>n+c,0));
+  for(const contour of orderedContours){
+    const source=reference.palette[contour.color];
+    const isSkin=contour.group!==1&&contour.group!==4&&source[0]>source[1]+8&&source[0]>125;
+    const target=face.skin==='deep'?source.map((c,i)=>Math.max(0,Math.round(c*[0.73,0.65,0.58][i]))):reference.palePalette[contour.color];
+    const rgb=isSkin?source.map((c,i)=>Math.round(c*(1-tone)+target[i]*tone)):source;
+    const fill=`rgb(${rgb.join(',')})`;
+    paths.push({d:contourPath(contour.loops,contour.group),fill,stroke:fill,width:0.1,group:groupNames[contour.group]});
+  }
+  referenceCache.set(key,paths);
+  if(referenceCache.size>3)referenceCache.delete(referenceCache.keys().next().value!);
+  return paths;
+}
+
 export function buildCharacterDrawing({ face, hair, look, graduation = false }: CharacterDrawingOptions): CharacterDrawing {
   const paths: PaintPath[] = [];
+  const traced=referenceHead(face,hair);
   const ink = '#292925';
-  const original: Record<string, string> = { eyes: 'natural', cheekbones: 'soft', nose: 'defined', skin: 'original', jaw: 'oval' };
-  const amount = (key: keyof typeof original) => {
-    const value = face.adjustments?.[key as keyof NonNullable<FaceSelections['adjustments']>];
-    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : face[key as 'eyes'] === original[key] ? 0 : 1;
-  };
-  const eyes = amount('eyes'), cheeks = amount('cheekbones'), nose = amount('nose'), jaw = amount('jaw');
-  const skinAmount = amount('skin');
-  const skin = mix('#f1d2b4', face.skin === 'deep' ? '#ae8867' : '#f6e4d5', skinAmount);
-  const shade = mix('#d7aa89', face.skin === 'deep' ? '#87634f' : '#dfc2ad', skinAmount);
+  const skinAmount = featureValue(face,'skin');
+  const skin = mix('#f7d8b1', face.skin === 'deep' ? '#b28d67' : '#eee0d2', skinAmount);
+  const shade = mix('#d8ab81', face.skin === 'deep' ? '#947052' : '#cdb5a1', skinAmount);
   const skinLine = '#986f58';
-  const hairDark = '#252723', hairMid = '#363932', hairLight = '#474940';
   let group = 'body';
   const p = (d: string, fill = 'none', stroke = ink, width = 2.1) => paths.push({ d, fill, stroke, width, group });
   const ellipse = (x: number, y: number, rx: number, ry: number, fill: string, stroke = ink, width = 1.6) => p(`M ${x - rx} ${y} a ${rx} ${ry} 0 1 0 ${rx * 2} 0 a ${rx} ${ry} 0 1 0 ${-rx * 2} 0`, fill, stroke, width);
 
-  group = 'hair-back';
-  if (hair === 'pony') {
-    p('M 285 49 C 348 37 363 121 337 194 C 327 231 353 262 340 293 C 316 270 305 237 310 198 C 327 122 310 90 285 75 Z', hairDark);
-    p('M 330 104 C 345 163 310 211 335 266', 'none', hairLight, 3);
-    p('M 226 48 C 205 8 239 -1 270 17 C 302 8 321 24 303 55 Z', hairMid);
-  } else if (hair === 'bob') {
-    p('M 181 67 C 157 94 151 145 151 197 L 164 237 Q 188 254 222 239 L 285 244 Q 329 253 349 225 C 361 181 347 109 327 76 Z', hairDark);
-    p('M 161 125 C 160 176 163 221 178 237 M 337 112 C 350 165 347 220 330 238', 'none', hairLight, 3);
-  } else if (hair === 'sleek') {
-    p('M 180 74 C 150 122 173 203 152 283 L 138 455 Q 164 432 186 451 L 325 448 L 366 467 C 336 329 346 204 333 113 L 312 58 Z', hairDark);
-    p('M 175 159 C 177 259 155 363 158 431 M 333 163 C 327 256 335 365 344 438', 'none', hairLight, 3);
-  } else {
-    p('M 180 70 C 140 111 159 155 145 199 C 124 232 145 254 123 281 C 103 312 127 339 105 365 C 86 389 112 412 91 446 Q 120 447 135 429 C 123 456 151 464 180 447 L 321 448 Q 356 470 374 447 C 348 422 380 402 356 375 C 343 355 365 326 344 303 C 322 277 349 251 332 220 C 313 184 357 117 319 74 Z', hairDark);
-    p('M 157 188 C 177 230 126 260 145 299 C 163 331 119 353 137 393 Q 151 419 131 441 M 330 220 C 315 252 347 277 325 309 C 304 340 350 366 335 401 Q 328 418 343 440', 'none', hairLight, 3);
-  }
+  paths.push(...traced.filter(path=>path.group==='hair-back'));
 
   group = 'body';
   // Fixed skeleton and matching skin palette for head, neck, arms, hands and legs.
@@ -61,6 +106,8 @@ export function buildCharacterDrawing({ face, hair, look, graduation = false }: 
   p('M 189 1220 Q 219 1235 242 1215 L 246 1247 Q 216 1269 177 1253 Z', '#272b29');
   p('M 270 1222 Q 293 1235 311 1218 L 332 1242 Q 315 1264 269 1255 Z', '#252925');
   p('M 271 1190 Q 291 1201 303 1190 L 304 1201 Q 287 1210 270 1201 Z', '#292b28');
+
+  paths.push(...traced.filter(path=>path.group==='reference-neck'));
 
   group = 'outfit';
   if (look === 'editorial') {
@@ -98,77 +145,8 @@ export function buildCharacterDrawing({ face, hair, look, graduation = false }: 
     p('M 214 253 L 255 319 L 244 656 L 194 281 Z M 297 253 L 258 319 L 270 656 L 316 281 Z', '#c5ab73');
   }
 
-  group = 'face';
-  const chin = 216 + jaw * 10;
-  const side = 62 + cheeks * 5 + jaw * 4;
-  // Face silhouette and all features are derived from this shared head origin.
-  ellipse(191, 149, 11, 24, skin);
-  ellipse(321, 149, 11, 24, skin);
-  p('M 186 137 Q 199 140 192 156 L 195 164 M 326 137 Q 313 140 320 156 L 317 164', 'none', skinLine, 1.4);
-  p(`M 190 117 C 187 62 215 38 255 37 C 298 37 325 64 322 116 L ${256 + side} 161 Q ${315 + jaw * 2} ${190 + jaw * 6} ${282 + jaw * 9} ${chin - 13} Q 257 ${chin + 8} ${230 - jaw * 9} ${chin - 13} Q ${197 - jaw * 2} ${190 + jaw * 6} ${256 - side} 161 Z`, skin);
-  p(`M 192 122 Q 199 158 ${210 + cheeks * 5} 174 L ${229 - jaw * 6} ${chin - 15} Q 205 ${chin - 29} ${256 - side} 161 Z M 320 122 Q 314 157 ${302 - cheeks * 5} 174 L ${283 + jaw * 6} ${chin - 15} Q 309 ${chin - 29} ${256 + side} 161 Z`, shade, 'none');
-  if (cheeks > 0.04) {
-    p(`M 201 158 L ${218 + cheeks * 5} ${162 - cheeks * 7} L 216 176 Z M 311 158 L ${294 - cheeks * 5} ${162 - cheeks * 7} L 296 176 Z`, shade, 'none');
-  }
-  // Brows preserve the protagonist's confident expression across adjustments.
-  p('M 205 119 Q 215 106 228 111 L 243 118 L 241 122 Q 222 115 205 123 Z', hairDark, 'none');
-  p('M 269 118 L 284 111 Q 297 106 307 119 L 307 123 Q 290 115 271 122 Z', hairDark, 'none');
-  group = 'eyes';
-  const drawEye = (center: number, mirrored: boolean) => {
-    const sign = mirrored ? -1 : 1;
-    const x = (local: number) => center + sign * local;
-    const outerY = 139 - eyes * 7;
-    const upper = 128 + eyes * 3;
-    const lower = 149 - eyes * 5;
-    p(`M ${x(-21)} ${outerY} Q ${x(-5)} ${upper} ${x(18)} 139 Q ${x(4)} ${lower} ${x(-21)} ${outerY} Z`, '#f2e8dc', '#382a27', 1.5);
-    ellipse(center - sign * 1, 139, 6.7, 7.8 - eyes * 3.5, '#615647', '#312c25', 1.3);
-    ellipse(center - sign * 1, 139, 3.2, 4.3 - eyes * 1.7, '#20251f', 'none', 0);
-    p(`M ${x(-24)} ${outerY - 4} L ${x(-19)} ${outerY} Q ${x(-4)} ${upper - 1} ${x(18)} 139`, 'none', '#282821', 2.6);
-    p(`M ${x(-22)} ${outerY} l ${-sign * 3} -4 M ${x(-17)} ${outerY - 3} l ${-sign * 2} -4`, 'none', '#282821', 1.25);
-    p(`M ${x(-18)} ${outerY + 6} Q ${x(0)} ${lower + 2} ${x(15)} 144`, 'none', skinLine, 0.9);
-  };
-  drawEye(224, false); drawEye(288, true);
-  group = 'nose';
-  const tip = 172 - nose * 2;
-  const nw = 6 + nose * 4;
-  p(`M 254 143 Q ${249 + nose * 2} 158 ${250 - nose * 3} ${tip - 4} L ${256 - nw} ${tip} Q 256 ${tip + 5} ${256 + nw} ${tip}`, 'none', skinLine, 1.2);
-  p(`M ${256 - nw} ${tip} l 3 1 M ${256 + nw} ${tip} l -3 1`, 'none', '#714c3c', 1.7);
-  p(`M 259 148 L 262 ${tip - 5} L ${256 + nw} ${tip} L 260 ${tip - 1} Z`, shade, 'none');
-  group = 'mouth';
-  p('M 236 188 Q 247 183 253 185 L 257 187 L 262 184 Q 270 186 278 188 L 258 193 Z', '#9d6050', '#815344', 0.8);
-  p('M 237 188 Q 253 194 278 188 Q 263 204 249 198 Z', '#b57b61', 'none');
-  p('M 237 189 Q 256 192 277 189', 'none', '#694637', 1.1);
-  p('M 248 205 Q 256 208 264 204', 'none', skinLine, 0.7);
-  group = 'jewelry';
-  for (const x of [190, 322]) {
-    ellipse(x, 170, 3.3, 4, '#ddd6be', '#696d65', 1.1);
-    p(`M ${x} 174 L ${x} 194 M ${x} 181 l -4 11 l 4 8 l 4 -8 Z`, '#b7bcb0', '#686e64', 1.1);
-  }
+  for(const layer of ['face','jewelry','hair-front']) paths.push(...traced.filter(path=>path.group===layer));
 
-  group = 'hair-front';
-  // Front and rear hair follow the exact head anchors; they never have asset offsets.
-  if (hair === 'pony') {
-    p('M 188 121 C 174 76 192 33 220 24 Q 250 11 279 26 C 318 25 338 73 324 122 Q 306 72 271 65 Q 236 61 209 100 L 190 143 Z', hairDark);
-    p('M 198 87 Q 221 41 261 43 Q 304 48 317 83 M 214 73 Q 244 39 274 51', 'none', hairLight, 2.6);
-    p('M 207 99 Q 190 123 190 150 L 185 175 Q 190 145 178 143 Q 172 121 191 103 Z', hairMid);
-    p('M 309 100 Q 325 126 323 157 L 330 178 Q 320 156 333 144 Q 337 126 322 108 Z', hairMid);
-  } else {
-    p('M 183 135 C 164 97 176 50 204 28 C 225 11 247 19 258 26 C 276 14 303 25 321 45 C 343 71 340 110 326 141 L 311 119 Q 304 77 269 61 Q 256 57 248 68 Q 227 92 206 117 L 190 147 Z', hairDark);
-    p('M 183 111 Q 184 52 222 32 Q 241 22 254 34 Q 220 47 207 74 Z M 272 33 Q 309 30 327 88 Q 308 58 276 57 Z', hairMid, 'none');
-    p('M 183 113 C 200 83 225 47 252 39 M 186 126 Q 219 72 247 61 M 265 33 Q 282 39 288 57 M 280 27 Q 322 40 328 106', 'none', hairLight, 1.7);
-    if (hair === 'bob') {
-      p('M 184 117 Q 174 164 184 214 L 200 240 Q 166 239 161 216 Q 151 168 175 111 Z M 325 115 Q 340 161 330 216 L 316 238 Q 342 233 346 210 Q 356 159 335 111 Z', hairMid);
-      p('M 178 142 Q 170 191 184 226 M 337 149 Q 344 192 330 226', 'none', hairLight, 1.5);
-    } else if (hair === 'sleek') {
-      p('M 182 114 Q 171 175 190 223 L 177 346 L 161 423 Q 178 312 169 231 Q 151 165 173 113 Z M 326 114 Q 346 172 328 231 L 342 422 L 320 353 L 316 222 Q 335 169 318 113 Z', hairMid);
-      p('M 176 173 L 179 264 L 167 391 M 330 173 L 324 248 L 335 391', 'none', hairLight, 1.6);
-    } else {
-      p('M 185 115 C 160 153 187 182 170 212 C 151 236 182 252 157 280 C 137 305 160 326 141 352 C 123 378 152 397 124 424 Q 153 424 169 395 C 183 370 157 350 179 321 C 205 286 172 271 192 241 C 210 210 181 191 196 160 L 204 118 Z', hairMid);
-      p('M 325 119 C 346 157 319 179 337 211 C 357 246 329 264 347 289 C 368 321 341 340 358 365 Q 380 403 348 423 Q 364 390 335 365 C 315 343 345 319 322 291 C 298 264 329 241 309 212 C 294 185 326 168 313 136 Z', hairMid);
-      p('M 180 150 C 169 182 189 196 179 216 C 158 246 184 260 167 280 C 145 309 171 330 155 353 Q 142 383 153 396 M 324 147 C 339 175 315 195 327 215 C 348 249 319 261 334 286 Q 358 313 341 339', 'none', hairLight, 2);
-      p('M 181 261 Q 183 286 165 307 M 162 355 Q 171 376 158 397 M 337 275 Q 328 291 343 310', 'none', '#222721', 1.3);
-    }
-  }
   if (graduation) {
     p('M 179 56 L 178 29 L 256 4 L 336 29 L 335 56 Q 255 38 179 56 Z', '#303440');
     p('M 159 28 L 256 0 L 352 28 L 256 62 Z', '#3c404a');
@@ -197,7 +175,10 @@ export function paintCharacter(context: CanvasRenderingContext2D, drawing: Chara
   context.lineJoin = 'round';
   context.lineCap = 'round';
   for (const path of drawing.paths) {
-    const shape = new Path(path.d);
+    let variants=compiledPaths.get(path);
+    if(!variants){variants=new Map();compiledPaths.set(path,variants);}
+    let shape=variants.get(Path);
+    if(!shape){shape=new Path(path.d);variants.set(Path,shape);}
     if (path.fill !== 'none') { context.fillStyle = path.fill; context.fill(shape); }
     if (path.stroke !== 'none' && path.width > 0) { context.strokeStyle = path.stroke; context.lineWidth = path.width; context.stroke(shape); }
   }
