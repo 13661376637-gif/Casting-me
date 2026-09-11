@@ -438,7 +438,6 @@ function TitleScreen({ language, avatar, onStart }: { language: Language; avatar
     <section className="title-screen">
       <div className="title-rays" aria-hidden="true" />
       <Sprite sprite="richard" avatar={avatar} position="left title-left" />
-      <Sprite sprite="linNatural" avatar={avatar} position="center title-center" />
       <Sprite sprite="maya" avatar={avatar} position="right title-right" />
       <div className="title-copy">
         <p>2D SPRITE DIALOGUE · LIGHT CAREER SIM</p>
