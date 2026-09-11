@@ -786,7 +786,6 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
     <section className="ending-screen">
       <div className="ending-flash" />
       <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center ending-lin" />
-      <Sprite sprite="maya" avatar={avatar} position="right ending-maya" />
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
         <span>SUCCESS REGISTERED</span><h2>NIGHT ORCHID</h2><p>LOOK PRESET: DRAGON LADY · NEXT CASTING NOTE: SAME ENERGY</p>

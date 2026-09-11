@@ -554,7 +554,6 @@ button { font: inherit; }
 .ending-screen { position:relative; min-height:100svh; padding-top:72px; overflow:hidden; color:white; background:linear-gradient(rgba(35,18,38,.35),rgba(35,18,38,.58)),url('/backgrounds/premiere-media-wall.png') center/cover no-repeat; }
 .ending-screen::before { content:"NIGHT ORCHID   NIGHT ORCHID   NIGHT ORCHID"; position:absolute; inset:104px 0 auto; padding:15px 0; overflow:hidden; color:#f0bfce; border-top:1px solid #e7bfc8;border-bottom:1px solid #e7bfc8; font-size:28px;font-weight:950;letter-spacing:.13em;white-space:nowrap;text-align:center;opacity:.44; }
 .ending-screen .character-sprite { height:min(87vh,900px); bottom:-12%; }
-.ending-maya { right:-8%!important; height:min(68vh,700px)!important; opacity:.55; }
 .ending-echo { position:absolute; z-index:12; left:50%; top:16%; transform:translateX(-50%); color:#f4c7d4; font:italic 15px Georgia,serif; letter-spacing:.06em; opacity:.75; }
 .ending-card { position:absolute; z-index:20; left:5vw; top:50%; width:min(400px,34vw); padding:26px; transform:translateY(-44%) rotate(-1deg); color:#17202d; border:4px solid #17202d; background:#f5e8c7ef; box-shadow:10px 10px 0 #ed5c90; }
 .ending-card > span { color:#b62f61; font-size:10px; font-weight:950; letter-spacing:.14em; }
@@ -717,7 +716,6 @@ button { font: inherit; }
   .training-character { right:-38vw;bottom:-9%;height:58vh;opacity:.25; }
   .continue-button { left:14px;bottom:24px; }
   .ending-screen .character-sprite { height:69vh;bottom:-4%; }
-  .ending-maya { display:none; }
   .ending-card { left:50%;top:29%;width:88vw;transform:translateX(-50%) rotate(-1deg); }
   .ending-card h2 { font-size:34px; }
   .ending-echo { top:14%;width:90%;text-align:center; }
