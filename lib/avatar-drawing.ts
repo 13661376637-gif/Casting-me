@@ -103,19 +103,52 @@ function referenceBody(look:AvatarLook,face:FaceSelections):PaintPath[]{
 export function buildCharacterDrawing({face,hair,look,graduation=false}:CharacterDrawingOptions):CharacterDrawing{
   const body=bodies[look];
   // A uniform pose preserves the same face while matching the reference neck.
-  const pose={scale:body.headScale,x:body.headOffset[0],y:body.headOffset[1]};
+  const headScale=graduation?body.headScale*1.08:body.headScale;
+  const pose={scale:headScale,x:graduation?256-256*headScale:body.headOffset[0],y:graduation?body.headOffset[1]-7:body.headOffset[1]};
   const traced=referenceHead(face,hair).map(path=>({...path,pose}));
   const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back'),...referenceBody(look,face)];
   const p=(d:string,fill:string,stroke='none',width=0,head=false)=>paths.push({d,fill,stroke,width,group:'outfit',...(head?{pose}:{})});
   if(graduation){
-    p('M 136 238 L 217 212 L 256 282 L 296 212 L 376 238 L 360 704 L 385 1139 Q 254 1170 130 1139 L 154 704 Z','#303440','#292925',2);
-    p('M 214 213 L 255 279 L 244 616 L 194 241 Z M 297 213 L 258 279 L 270 616 L 316 241 Z','#c5ab73');
+    const skin=mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',featureValue(face,'skin'));
+    // The graduation model is drawn in the same 512 x 1280 character space as
+    // the editable face. Curved shoulders, articulated sleeves and long folds
+    // replace the old flat two-polygon overlay, keeping the silhouette human.
+    p('M 220 184 Q 256 207 292 184 L 294 254 Q 256 275 218 254 Z',skin,'#30241e',1.7);
+    p('M 146 275 Q 160 251 205 238 L 228 230 L 256 293 L 284 230 L 307 238 Q 352 251 366 275 Q 379 309 383 362 L 412 641 Q 419 690 389 721 Q 369 742 347 715 L 372 1118 Q 326 1154 256 1155 Q 186 1154 140 1118 L 165 715 Q 143 742 123 721 Q 93 690 100 641 L 129 362 Q 133 309 146 275 Z','#24262c','#17191f',3);
+    p('M 149 293 Q 126 357 114 614 Q 110 672 139 707 Q 151 720 166 704 L 190 650 L 188 310 Q 169 297 149 293 Z','#2e3037','#191b20',2.1);
+    p('M 363 293 Q 386 357 398 614 Q 402 672 373 707 Q 361 720 346 704 L 322 650 L 324 310 Q 343 297 363 293 Z','#2a2c32','#191b20',2.1);
+    p('M 187 301 Q 212 280 232 267 L 256 305 L 280 267 Q 300 280 325 301 L 326 520 L 346 1115 Q 307 1143 256 1143 Q 205 1143 166 1115 L 186 520 Z','#25272d','#181a20',1.6);
+    // Satin collar: a restrained ivory V instead of a bright block running
+    // through the whole torso.
+    p('M 184 259 L 218 230 L 256 286 L 238 312 L 195 274 Z','#f0eee9','#202228',2);
+    p('M 328 259 L 294 230 L 256 286 L 274 312 L 317 274 Z','#e7e5e0','#202228',2);
+    p('M 218 230 L 256 268 L 294 230 L 306 239 L 256 302 L 206 239 Z','#17191e','#202228',1.5);
+    // Hand-drawn robe folds keep the flat-paint treatment while giving the
+    // garment the same line density as the supplied character art.
+    p('M 187 342 Q 203 372 211 501 M 214 319 Q 225 397 224 1127 M 256 309 L 256 1140 M 298 319 Q 287 397 288 1127 M 325 342 Q 309 372 301 501 M 168 713 Q 203 739 235 744 M 344 713 Q 309 739 277 744','none','#15171c',2);
+    p('M 153 339 Q 134 463 132 623 M 359 339 Q 378 463 380 623 M 199 731 Q 183 925 183 1117 M 313 731 Q 329 925 329 1117','none','#3a3d45',2.4);
+    // Diploma and hands are painted into the same canvas so the pose reads as
+    // one illustration rather than a head placed over a costume sticker.
+    p('M 185 521 L 319 504 L 327 654 L 195 670 Z','#f4f0e7','#2b2a29',2.4);
+    p('M 194 532 L 310 518 L 317 641 L 204 654 Z','none','#c2a35c',2);
+    p('M 244 579 A 14 14 0 1 0 272 579 A 14 14 0 1 0 244 579','#c2a35c','#8f7135',1.2);
+    p('M 255 569 L 263 576 L 260 588 L 250 590 L 244 581 L 247 572 Z','none','#f4f0e7',1.3);
+    p('M 179 548 Q 168 553 171 573 L 181 617 Q 186 637 204 638 Q 216 637 217 626 L 211 616 L 202 608 L 197 565 Q 191 547 179 548 Z',skin,'#30241e',2);
+    p('M 333 543 Q 344 549 341 570 L 331 614 Q 326 634 308 635 Q 296 634 295 623 L 301 613 L 310 605 L 315 562 Q 321 542 333 543 Z',skin,'#30241e',2);
+    p('M 181 581 Q 190 600 207 611 M 331 578 Q 322 597 305 608','none','#9c7158',1.15);
+    // Ankles and shoes complete the full-body proportion below the hem.
+    p('M 216 1117 L 247 1117 L 245 1217 Q 232 1234 216 1217 Z',skin,'#30241e',1.7);
+    p('M 265 1117 L 296 1117 L 296 1217 Q 280 1234 267 1217 Z',skin,'#30241e',1.7);
+    p('M 208 1210 Q 224 1200 245 1211 L 249 1231 Q 238 1250 202 1250 Q 191 1240 208 1210 Z','#202126','#111318',2.2);
+    p('M 267 1211 Q 288 1200 304 1210 Q 321 1240 310 1250 Q 274 1250 263 1231 Z','#202126','#111318',2.2);
   }
   for(const layer of ['scalp-base','face','jewelry','hair-front'])paths.push(...traced.filter(path=>path.group===layer));
   if(graduation){
-    p('M 179 56 L 178 29 L 256 4 L 336 29 L 335 56 Q 255 38 179 56 Z','#303440','#292925',2,true);
-    p('M 159 28 L 256 0 L 352 28 L 256 62 Z','#3c404a','#292925',2,true);
-    p('M 256 28 L 336 35 L 335 107','none','#c5ab73',2.4,true);
+    p('M 182 59 L 184 35 Q 256 3 328 35 L 330 59 L 322 104 Q 256 76 190 104 Z','#22242a','#111318',2,true);
+    p('M 156 42 L 256 5 L 356 42 L 256 82 Z','#292b31','#111318',2.3,true);
+    p('M 256 6 L 256 81 M 170 43 L 256 61 L 342 43','none','#3b3e46',1.3,true);
+    p('M 337 39 Q 345 76 341 116','none','#c5a55a',2.4,true);
+    p('M 335 111 L 347 111 L 344 145 L 338 145 Z','#c5a55a','#6f582d',1,true);
   }
   return {paths,head:{x:256*pose.scale+pose.x,y:132*pose.scale+pose.y},headScale:pose.scale};
 }
