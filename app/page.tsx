@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -56,6 +57,31 @@ type Beat = {
   showRoleCard?: boolean;
   tag?: string;
 };
+
+function useFullscreenUiScale(baseWidth: number, baseHeight: number) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (window.innerWidth <= 640) {
+        setScale(1);
+        return;
+      }
+
+      const edgeGap = 16;
+      const topBarHeight = 72;
+      const availableWidth = Math.max(320, window.innerWidth - edgeGap * 2);
+      const availableHeight = Math.max(320, window.innerHeight - topBarHeight - edgeGap * 2);
+      setScale(Math.min(availableWidth / baseWidth, availableHeight / baseHeight));
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [baseHeight, baseWidth]);
+
+  return { '--ui-scale': scale } as CSSProperties;
+}
 
 const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolean }> = {
   linNatural: { src: '', name: 'Lin' },
@@ -453,6 +479,7 @@ function TitleScreen({ language, avatar, onStart }: { language: Language; avatar
 
 
 function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; soundOn: boolean; onConfirm: (fame: number, pressure: number, look: LookKey, face: FaceSelections) => void }) {
+  const fullscreenCardStyle = useFullscreenUiScale(1120, 760);
   const [step, setStep] = useState<1 | 2>(1);
   const [activeTool, setActiveTool] = useState<FeatureKey>('eyes');
   const [visitedTools, setVisitedTools] = useState<FeatureKey[]>([]);
@@ -496,7 +523,7 @@ function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; s
 
   return (
     <section className="creator-screen stage-screen">
-      <div className={`creator-card creator-step-${step}`}>
+      <div className={`creator-card fullscreen-ui-card creator-step-${step}`} style={fullscreenCardStyle}>
         <div className="creator-preview">
           <span>{step === 1 ? 'PLAYER MODEL · INTERACTIVE FACE TOOLS' : 'PLAYER MODEL · LOOK PREVIEW'}</span>
           {step === 1 ? (
@@ -579,9 +606,11 @@ function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; s
 }
 
 function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onConfirm: () => void }) {
+  const fullscreenCardStyle = useFullscreenUiScale(1020, 690);
+
   return (
     <section className="profile-screen stage-screen">
-      <div className="screen-card profile-card">
+      <div className="screen-card profile-card fullscreen-ui-card" style={fullscreenCardStyle}>
         <div className="card-label">PLAYER PROFILE · 001</div>
         <div className="profile-layout">
           <div className="profile-portrait"><AvatarArt avatar={avatar} className="profile-natural" /></div>

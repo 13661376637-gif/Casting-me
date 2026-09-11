@@ -286,6 +286,38 @@ button { font: inherit; }
 .dialogue-scene.has-background::before { background:linear-gradient(180deg,rgba(18,26,38,.08),rgba(18,26,38,.2)); }
 .profile-screen { background:url('/backgrounds/university-campus.png') center/cover no-repeat; }
 .profile-screen::before { background:linear-gradient(135deg,rgba(209,202,226,.3),rgba(64,88,91,.44)); }
+
+/* Fullscreen presentation for the two setup interfaces. Their logical canvases
+   keep the original proportions while the complete UI scales as one unit. */
+@media (min-width: 641px) {
+  .creator-screen.stage-screen,
+  .profile-screen.stage-screen {
+    display:grid;
+    place-items:center;
+    width:100vw;
+    height:100svh;
+    min-height:100svh;
+    padding:88px 16px 16px;
+    overflow:hidden;
+  }
+  .fullscreen-ui-card {
+    flex:none;
+    margin:0;
+    min-height:0;
+    transform:scale(var(--ui-scale,1));
+    transform-origin:center;
+  }
+  .creator-card.fullscreen-ui-card {
+    width:1120px;
+    height:760px;
+    min-height:0;
+  }
+  .profile-card.fullscreen-ui-card {
+    width:1020px;
+    height:690px;
+    min-height:0;
+  }
+}
 .set-dressing { position:absolute; z-index:3; top:98px; left:50%; display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-50%); color:#263244; }
 .set-dressing span { padding:6px 12px; border:2px solid #263244; background:rgba(245,232,199,.9); font-size:10px; font-weight:950; letter-spacing:.13em; }
 .set-dressing i { font-size:9px; font-style:normal; font-weight:900; letter-spacing:.14em; }
