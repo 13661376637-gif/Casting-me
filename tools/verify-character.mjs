@@ -82,5 +82,11 @@ for (const [index, face] of [natural, coded, muted].entries()) {
   pg.drawImage(portrait, index * 500, 0);
 }
 writeFileSync(join(output, 'face-parameters.png'), portraits.toBuffer('image/png'));
+const graduationCanvas = createCanvas(512, 1280);
+const graduationContext = graduationCanvas.getContext('2d');
+graduationContext.fillStyle = '#d8d2e6';
+graduationContext.fillRect(0, 0, 512, 1280);
+paintCharacter(graduationContext, buildCharacterDrawing({ face: natural, hair: 'original', look: 'natural', graduation: true }), 512, 1280, false, Path2D);
+writeFileSync(join(output, 'graduation.png'), graduationCanvas.toBuffer('image/png'));
 console.log(`PASS: ${checks} checks covering isolated feature edits, fractional parameters, fixed body, shared face across outfits, and saved appearance round-trip.`);
 console.log(output);
