@@ -58,6 +58,57 @@ type Beat = {
   tag?: string;
 };
 
+const BACKGROUND_ASSETS = [
+  '/backgrounds/university-campus.png',
+  '/backgrounds/audition-room.png',
+  '/backgrounds/night-apartment.png',
+  '/backgrounds/western-restaurant.png',
+  '/backgrounds/magazine-studio.png',
+  '/backgrounds/agency-meeting-room.png',
+  '/backgrounds/premiere-media-wall.png',
+] as const;
+
+function useBackgroundPreload() {
+  const [readyBackgrounds, setReadyBackgrounds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const images = BACKGROUND_ASSETS.map((src, index) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.fetchPriority = index < 2 ? 'high' : 'auto';
+
+      const markReady = () => {
+        if (cancelled) return;
+        setReadyBackgrounds((current) => {
+          if (current.has(src)) return current;
+          const next = new Set(current);
+          next.add(src);
+          return next;
+        });
+      };
+
+      image.onload = () => {
+        if (typeof image.decode === 'function') image.decode().then(markReady, markReady);
+        else markReady();
+      };
+      image.onerror = markReady;
+      image.src = src;
+      return image;
+    });
+
+    return () => {
+      cancelled = true;
+      images.forEach((image) => {
+        image.onload = null;
+        image.onerror = null;
+      });
+    };
+  }, []);
+
+  return readyBackgrounds;
+}
+
 function useFullscreenUiScale(baseWidth: number, baseHeight: number) {
   const [scale, setScale] = useState(1);
 
@@ -342,6 +393,7 @@ export default function Home() {
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
   const [appearance, setAppearance] = useState<CharacterAppearance | null>(null);
+  const readyBackgrounds = useBackgroundPreload();
   const avatar: AvatarKey = appearance?.hair ?? 'original';
   const lockedLook = appearance?.look ?? null;
   const lockedFace = appearance?.face ?? null;
@@ -349,6 +401,10 @@ export default function Home() {
   const beats = sequences[screen];
   const beat = beats?.[beatIndex];
   const sceneBackground = getSceneBackground(screen, beatIndex);
+  const activeBackground = sceneBackground
+    ?? (screen === 'profile' ? '/backgrounds/university-campus.png' : undefined)
+    ?? (screen === 'ending' ? '/backgrounds/premiere-media-wall.png' : undefined);
+  const backgroundReady = !activeBackground || readyBackgrounds.has(activeBackground);
 
   useEffect(() => {
     setChoiceReady(false);
@@ -436,10 +492,10 @@ export default function Home() {
 
       {screen === 'title' && <TitleScreen language={language} avatar={avatar} onStart={() => moveTo('prologue')} />}
       {screen === 'creator' && <AvatarCreator language={language} soundOn={soundOn} onConfirm={confirmAvatar} />}
-      {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} onConfirm={() => moveTo('firstRead')} />}
+      {screen === 'profile' && <ProfileScreen language={language} avatar={avatar} fame={fame} pressure={pressure} backgroundReady={backgroundReady} onConfirm={() => moveTo('firstRead')} />}
       {screen === 'training' && <TrainingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
-      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {screen === 'ending' && <EndingScreen language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} backgroundReady={backgroundReady} onRestart={restart} />}
+      {beat && <DialogueScene beat={beat} language={language} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} backgroundReady={backgroundReady} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
     </main>
   );
 }
@@ -605,7 +661,7 @@ function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; s
   );
 }
 
-function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; onConfirm: () => void }) {
+function ProfileScreen({ language, avatar, fame, pressure, backgroundReady, onConfirm }: { language: Language; avatar: AvatarKey; fame: number; pressure: number; backgroundReady: boolean; onConfirm: () => void }) {
   const fullscreenCardStyle = useFullscreenUiScale(1020, 690);
 
   return (
@@ -613,7 +669,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
       <div className="screen-card profile-card fullscreen-ui-card" style={fullscreenCardStyle}>
         <div className="card-label">PLAYER PROFILE · 001</div>
         <div className="profile-layout">
-          <div className="profile-portrait"><AvatarArt avatar={avatar} className="profile-natural" /></div>
+          <div className="profile-portrait">{backgroundReady && <AvatarArt avatar={avatar} className="profile-natural" />}</div>
           <div className="profile-data">
             <p>LIN / 林</p><h2>ACTOR</h2>
             <dl><div><dt>LOOK</dt><dd>NATURAL</dd></div><div><dt>TRAINING</dt><dd>FORMAL ACTING</dd></div><div><dt>STATUS</dt><dd>UNCAST</dd></div><div><dt>FAME / PRESSURE</dt><dd>{fame} / {pressure}</dd></div></dl>
@@ -626,7 +682,7 @@ function ProfileScreen({ language, avatar, fame, pressure, onConfirm }: { langua
   );
 }
 
-function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, backgroundReady, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; backgroundReady: boolean; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -634,9 +690,9 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
-      {!isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
-      {!isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
-      {!isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="right" />}
+      {backgroundReady && !isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
+      {backgroundReady && !isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
+      {backgroundReady && !isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="right" />}
       {beat.showProjects && !isFullScreenChoice && <ProjectCards />}
       {beat.showRoleCard && <RoleCard />}
       {beat.flash && <div className="camera-flash" key={`flash-${index}`} />}
@@ -781,11 +837,11 @@ function TrainingScreen({ language, avatar, lockedLook, lockedFace, done, setDon
   );
 }
 
-function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure, onRestart }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; fame: number; pressure: number; onRestart: () => void }) {
+function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure, backgroundReady, onRestart }: { language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; fame: number; pressure: number; backgroundReady: boolean; onRestart: () => void }) {
   return (
     <section className="ending-screen">
       <div className="ending-flash" />
-      <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center ending-lin" />
+      {backgroundReady && <Sprite sprite="linDragon" avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center ending-lin" />}
       <div className="ending-echo">“Now everyone knows how to pitch you.”</div>
       <div className="ending-card">
         <span>SUCCESS REGISTERED</span><h2>NIGHT ORCHID</h2><p>LOOK PRESET: DRAGON LADY · NEXT CASTING NOTE: SAME ENERGY</p>
