@@ -195,9 +195,11 @@ export function buildCharacterDrawing({face,hair,look,graduation=false}:Characte
 // is an affine crop of the full model, not another portrait asset.
 export function characterCamera(width: number, height: number, portrait: boolean, drawing?:Pick<CharacterDrawing,'head'|'headScale'>) {
   if (portrait) {
-    const scale = Math.min(width / 265, height / 310)/(drawing?.headScale??1);
+    // Keep the editor centered on the face while leaving enough upper torso in
+    // frame for the head, neck and shoulders to read as one proportioned model.
+    const scale = Math.min(width / 300, height / 350)/(drawing?.headScale??1);
     const head=drawing?.head??{x:256,y:132};
-    return { scale, x: width / 2 - head.x * scale, y: height * 0.44 - head.y * scale };
+    return { scale, x: width / 2 - head.x * scale, y: height * 0.4 - head.y * scale };
   }
   const scale = Math.min(width / 512, height / 1280);
   return { scale, x: (width - 512 * scale) / 2, y: height - 1280 * scale };

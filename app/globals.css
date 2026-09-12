@@ -184,6 +184,11 @@ button { font: inherit; }
 .face-tool-cursor.pressed::before { opacity:1; transform:translateY(0); }
 .face-tool-cursor::after { content:""; position:absolute; right:-2px; top:-1px; width:13px; height:7px; border:2px solid #ed5c90; border-radius:50%; opacity:.68; transform:rotate(-20deg); }
 .face-tool-cursor.pressed::after { border-color:#f5e8c7; background:#ed5c90; opacity:1; }
+.face-tool-ready { position:absolute; z-index:7; top:74px; right:18px; display:grid; grid-template-columns:48px auto; grid-template-rows:auto auto; align-items:center; column-gap:7px; min-width:128px; padding:8px 10px; color:#26364b; background:rgba(245,232,199,.9); pointer-events:none; }
+.face-tool-ready > small { grid-column:2; align-self:end; color:#a8325d; font-size:7px; font-weight:950; letter-spacing:.12em; }
+.face-tool-ready > b { grid-column:2; align-self:start; max-width:72px; overflow:hidden; font-size:8px; letter-spacing:.04em; text-overflow:ellipsis; white-space:nowrap; }
+.face-tool-ready .face-tool-preview { position:relative; grid-column:1; grid-row:1 / 3; left:auto; top:auto; width:45px; height:55px; opacity:1; transform:rotate(-8deg); transform-origin:center; filter:none; }
+.face-tool-ready .face-tool-preview::before,.face-tool-ready .face-tool-preview::after { display:none; }
 @keyframes face-swap { from{opacity:.45;transform:scale(1.012)} to{opacity:1;transform:scale(1)} }
 .face-guide { position:absolute; z-index:3; display:block; pointer-events:none; opacity:.45; }
 .face-guide-eyes { left:22%; right:22%; top:36.5%; height:14%; border:1px dashed #f5e8c7; }
@@ -296,12 +301,38 @@ button { font: inherit; }
 .profile-data blockquote { margin:28px 0 auto; padding-left:18px; border-left:5px solid #e85b8f; font-size:18px; font-weight:700; line-height:1.5; }
 .confirm-button { align-self:flex-start; height:44px; margin-top:25px; padding:0 18px; border:2px solid #1c2634; border-radius:0; background:#e85b8f; box-shadow:4px 4px 0 #1c2634; font-weight:900; letter-spacing:.06em; }
 
+/* The casting editor uses flat, frameless surfaces: color and spacing separate
+   the work area without the heavy black frames or hard shadows used in scenes. */
+.creator-screen .creator-card,
+.creator-screen .creator-preview,
+.creator-screen .creator-rule,
+.creator-screen .face-compare button,
+.creator-screen .face-hotspot,
+.creator-screen .creator-readout,
+.creator-screen .feature-panel,
+.creator-screen .feature-options button,
+.creator-screen .creator-score,
+.creator-screen .look-card,
+.creator-screen .look-card-art,
+.creator-screen .confirm-avatar-button { border:0; box-shadow:none; }
+.creator-screen .creator-card,
+.creator-screen .creator-avatar,
+.creator-screen .creator-qipao,
+.creator-screen .creator-look,
+.creator-screen .face-tool-cursor { filter:none; }
+.creator-screen .face-tool-tabs button { border-color:#b7b8b8; box-shadow:none; }
+.creator-screen .face-tool-tabs button.active { border-color:#a8325d; box-shadow:none; }
+.creator-screen .feature-options button.selected,
+.creator-screen .look-card.selected,
+.creator-screen .face-compare button.selected { box-shadow:none; }
+.creator-screen :is(button,[role="slider"]):focus-visible { outline:2px solid #a8325d; outline-offset:2px; }
+
 @media (hover:hover) and (pointer:fine) {
   .face-closeup .editable-character-canvas { cursor:none; }
 }
 
 @media (hover:none), (pointer:coarse) {
-  .face-tool-cursor { display:none; }
+  .face-tool-cursor:not(.face-tool-preview) { display:none; }
 }
 
 /* Dialogue scenes */

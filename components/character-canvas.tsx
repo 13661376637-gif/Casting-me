@@ -158,9 +158,18 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
         }}
       />
       {editable && activeTool && (
-        <span ref={toolCursorRef} className={`face-tool-cursor face-tool-cursor-${activeTool}`} aria-hidden="true">
-          <FaceToolCursor feature={activeTool} />
-        </span>
+        <>
+          <span className="face-tool-ready" aria-hidden="true">
+            <small>ACTIVE TOOL</small>
+            <span className={`face-tool-cursor face-tool-preview face-tool-cursor-${activeTool}`}>
+              <FaceToolCursor feature={activeTool} />
+            </span>
+            <b>{activeTool.toUpperCase()}</b>
+          </span>
+          <span ref={toolCursorRef} className={`face-tool-cursor face-tool-cursor-${activeTool}`} aria-hidden="true">
+            <FaceToolCursor feature={activeTool} />
+          </span>
+        </>
       )}
     </>
   );
