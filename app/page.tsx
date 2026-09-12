@@ -28,7 +28,7 @@ import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as Fea
 
 type Language = 'en' | 'zh';
 type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
-type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'linGraduation' | 'richard' | 'david' | 'claire' | 'maya';
+type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'richard' | 'david' | 'claire' | 'maya';
 
 type FaceOption = {
   id: string;
@@ -140,7 +140,6 @@ const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolea
   linDragonBack: { src: '', name: 'Lin — Night Orchid look, rear pose' },
   linTraining: { src: '', name: 'Lin — Night Orchid fight training' },
   linPorcelain: { src: '', name: 'Lin — Porcelain Light look' },
-  linGraduation: { src: '', name: 'Lin at graduation' },
   richard: { src: '/characters/richard.png', name: 'Richard Cole' },
   david: { src: '/characters/david.png', name: 'David Miller' },
   claire: { src: '/characters/claire.png', name: 'Claire Bennett' },
@@ -243,7 +242,7 @@ const choice06: ChoiceSet = {
 
 const prologue: Beat[] = [
   { speakerEn: 'ACTING SCHOOL', speakerZh: '表演学校', en: 'She spent four years learning how to understand different people.', zh: '她用四年学习如何理解不同的人。', center: 'linNatural', tag: 'PANEL 01 / ACTING SCHOOL' },
-  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'She believed the work would eventually speak for itself.', zh: '她相信，演技最终会说话。', center: 'linGraduation', tag: 'PANEL 02 / CLASS OF 2026' },
+  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'She believed the work would eventually speak for itself.', zh: '她相信，演技最终会说话。', center: 'linNatural', tag: 'PANEL 02 / CLASS OF 2026' },
   { speakerEn: 'HOLLYWOOD', speakerZh: '好莱坞', en: 'New roles are created here every day—and familiar faces are searched for again and again.', zh: '这里每天都产生新角色，也反复寻找熟悉的面孔。', center: 'linNatural', tag: 'PANEL 03 / LOS ANGELES' },
   { speakerEn: 'FIRST CALL', speakerZh: '第一次机会', en: 'She thought the first step into the industry was proving she could play a complete person.', zh: '她以为进入行业的第一步，是证明自己能演一个完整的人。', center: 'linNatural', tag: '“I WANT TO PLAY A PERSON, NOT A CATEGORY.”' },
 ];
@@ -857,7 +856,7 @@ function EndingScreen({ language, avatar, lockedLook, lockedFace, fame, pressure
 function Sprite({ sprite, avatar, lockedLook = null, lockedFace = null, position }: { sprite: SpriteKey; avatar: AvatarKey; lockedLook?: LookKey | null; lockedFace?: FaceSelections | null; position: string }) {
   const data = sprites[sprite];
   if (sprite.startsWith('lin')) {
-    return <CharacterCanvas look={lockedLook ?? 'natural'} hair={avatar} face={lockedFace} graduation={!lockedLook && sprite === 'linGraduation'} className={`character-sprite ${position}`} label={data.name} />;
+    return <CharacterCanvas look={lockedLook ?? 'natural'} hair={avatar} face={lockedFace} className={`character-sprite ${position}`} label={data.name} />;
   }
   return <img className={`character-sprite ${position}`} src={data.src} alt={data.name} />;
 }
@@ -878,6 +877,6 @@ function RoleCard() {
 function stageInfoFromBeat(beat: Beat) {
   if (beat.showProjects) return 'CALLBACK ROOM / PROJECT SLATE';
   if (beat.showRoleCard) return 'MAKEUP TRAILER / THREE MONTHS LATER';
-  if (beat.center === 'linGraduation') return 'CLASS OF 2026';
+  if (beat.speakerEn === 'GRADUATION') return 'CLASS OF 2026';
   return 'AUDITION IN PROGRESS';
 }
