@@ -179,7 +179,11 @@ button { font: inherit; }
 .face-tool-cursor .tool-pencil-tip { fill:#252f3e; stroke:#1c2634; stroke-width:2.5; stroke-linejoin:round; }
 .face-tool-cursor .tool-sculpt-tip { fill:#d6bbc8; stroke:#1c2634; stroke-width:2.5; stroke-linejoin:round; }
 .face-tool-cursor .tool-detail,.face-tool-cursor .tool-ink { fill:none; stroke:#f5e8c7; stroke-width:1.5; stroke-linecap:round; }
+.face-tool-cursor .tool-grip-lines { fill:none; stroke:#f5e8c7; stroke-width:1.8; stroke-linecap:square; opacity:.82; }
+.face-tool-cursor::before { content:"↔"; position:absolute; right:-27px; top:13px; display:grid; place-items:center; width:27px; height:19px; color:#f5e8c7; border:2px solid #f5e8c7; background:#26364b; box-shadow:3px 3px 0 #ed5c90; font-size:14px; font-weight:950; line-height:1; opacity:0; transform:translateY(3px); transition:opacity .08s ease,transform .08s ease; }
+.face-tool-cursor.pressed::before { opacity:1; transform:translateY(0); }
 .face-tool-cursor::after { content:""; position:absolute; right:-2px; top:-1px; width:13px; height:7px; border:2px solid #ed5c90; border-radius:50%; opacity:.68; transform:rotate(-20deg); }
+.face-tool-cursor.pressed::after { border-color:#f5e8c7; background:#ed5c90; opacity:1; }
 @keyframes face-swap { from{opacity:.45;transform:scale(1.012)} to{opacity:1;transform:scale(1)} }
 .face-guide { position:absolute; z-index:3; display:block; pointer-events:none; opacity:.45; }
 .face-guide-eyes { left:22%; right:22%; top:36.5%; height:14%; border:1px dashed #f5e8c7; }

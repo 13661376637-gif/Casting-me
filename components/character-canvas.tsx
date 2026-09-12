@@ -26,6 +26,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
       <svg viewBox="0 0 72 88" aria-hidden="true">
         <path className="tool-shadow" d="M17 75 45 25l10 6-28 50z" />
         <path className="tool-handle" d="M17 75 45 25l10 6-28 50z" />
+        <path className="tool-grip-lines" d="m25 60 10 6m-7-12 10 6" />
         <path className="tool-ferrule" d="m42 29 8-14 14 8-9 13z" />
         <path className="tool-bristles" d={broad ? 'M49 16Q53 2 70 4q2 14-8 22z' : 'M49 16Q54 3 69 2q0 15-7 24z'} />
         <path className="tool-ink" d="M54 13q7-7 14-8" />
@@ -38,6 +39,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
       <svg viewBox="0 0 72 88" aria-hidden="true">
         <path className="tool-shadow" d="m17 76 33-51 9 6-32 52z" />
         <path className="tool-handle" d="m17 76 33-51 9 6-32 52z" />
+        <path className="tool-grip-lines" d="m27 61 10 7m-7-12 10 7" />
         <path className="tool-ferrule" d="m47 28 8-15 12 8-9 15z" />
         <path className="tool-silicone" d="M55 14 64 1l7 5-5 16z" />
         <path className="tool-detail" d="m56 13 10 7" />
@@ -50,6 +52,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
     <svg viewBox="0 0 72 88" aria-hidden="true">
       <path className="tool-shadow" d="m17 78 34-57 10 6-34 58z" />
       <path className="tool-handle" d="m17 78 34-57 10 6-34 58z" />
+      <path className="tool-grip-lines" d="m27 62 10 6m-7-12 10 6" />
       <path className="tool-ferrule" d="m48 26 8-14 11 7-8 14z" />
       <path className={jaw ? 'tool-sculpt-tip' : 'tool-pencil-tip'} d={jaw ? 'm56 13 8-12 7 4-5 15z' : 'm56 13 7-12 6 4-3 15z'} />
       <path className="tool-detail" d="m56 13 10 6" />
