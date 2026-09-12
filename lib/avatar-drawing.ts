@@ -24,7 +24,7 @@ const graduationPaths: PaintPath[] = [
   { d: graduation.silhouette, fill: '#15161b', stroke: 'none', width: 0, group: 'outfit' },
   ...graduation.shapes.map(shape => {
     const fill = `rgb(${shape.rgb.join(',')})`;
-    return { d: shape.d, fill, stroke: fill, width: 0.65, group: 'outfit' };
+    return { d: shape.d, fill, stroke: fill, width: 0.45, group: 'outfit' };
   }),
 ];
 const featureValue = (face: FaceSelections, key: string) => {
