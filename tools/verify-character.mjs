@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance, LOOK_HAIR } from '../lib/avatar-model.ts';
 import { buildCharacterDrawing, paintCharacter, characterCamera } from '../lib/avatar-drawing.ts';
+import bodies from '../lib/avatar-bodies.json' with { type: 'json' };
 
 const runtime = process.argv[2];
 if (!runtime) throw new Error('Supply the bundled Node package directory.');
@@ -17,6 +18,12 @@ const coded = { eyes: 'coded', cheekbones: 'high', nose: 'rounded', skin: 'porce
 const muted = { ...coded, skin: 'deep' };
 const baseline = buildCharacterDrawing({ face: natural, hair: 'original', look: 'natural' });
 const group = (drawing, name) => drawing.paths.filter(path => path.group === name);
+const pathMaxY = paths => {
+  let maximum = -Infinity;
+  for (const path of paths) for (const match of path.d.matchAll(/[ML](-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)) maximum = Math.max(maximum, Number(match[2]));
+  return maximum;
+};
+const close = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 0.001, `${message}: ${actual} !== ${expected}`);
 const imageBytes = drawing => {
   const canvas = createCanvas(512, 1280);
   paintCharacter(canvas.getContext('2d'), drawing, 512, 1280, false, Path2D);
@@ -57,6 +64,28 @@ for (const look of Object.keys(LOOK_HAIR)) {
   const camera = characterCamera(420, 600, true,candidate);
   assert.equal(candidate.head.x * camera.scale + camera.x, 210);
   checks += 2;
+}
+
+// Every customizable head layer uses one transform, and the transform is
+// recomputed from the garment's source chin. Jaw editing may reshape the lower
+// face, but it must never move the terminal chin away from the body anchor.
+for (const look of Object.keys(LOOK_HAIR)) {
+  const body = bodies[look];
+  const targetX = body.chin[0] * body.scale + body.offset[0];
+  const targetY = body.chin[1] * body.scale + body.offset[1];
+  const base = buildCharacterDrawing({ face: natural, hair: LOOK_HAIR[look], look });
+  const basePose = group(base, 'face')[0].pose;
+  const baseChinY = pathMaxY(group(base, 'face'));
+  for (const amount of [0, 0.5, 1]) {
+    const drawing = buildCharacterDrawing({ face: adjustFace(natural, 'jaw', amount), hair: LOOK_HAIR[look], look });
+    const posed = drawing.paths.filter(path => path.pose);
+    assert.equal(new Set(posed.map(path => path.pose)).size, 1, `${look}/${amount}: all head layers must share one transform`);
+    assert.deepEqual(posed[0].pose, basePose, `${look}/${amount}: face editing must not move the head transform`);
+    close(posed[0].pose.x + 256 * posed[0].pose.scale, targetX, `${look}/${amount}: horizontal neck anchor`);
+    close(posed[0].pose.y + 216 * posed[0].pose.scale, targetY, `${look}/${amount}: vertical neck anchor`);
+    close(pathMaxY(group(drawing, 'face')), baseChinY, `${look}/${amount}: terminal chin position`);
+    checks += 5;
+  }
 }
 
 const sheet = createCanvas(1536, 1400);

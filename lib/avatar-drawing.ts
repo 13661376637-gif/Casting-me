@@ -16,6 +16,9 @@ const mix = (a: string, b: string, t: number) => {
 const referenceCache = new Map<string, PaintPath[]>();
 const bodyCache = new Map<string, PaintPath[]>();
 const compiledPaths = new WeakMap<PaintPath, Map<typeof Path2D, Path2D>>();
+const HEAD_LOCAL_X = 256;
+const HEAD_CHIN_Y = 216;
+const HEAD_FOCUS_Y = 132;
 const featureValue = (face: FaceSelections, key: string) => {
   const defaults: Record<string,string> = {eyes:'natural',cheekbones:'soft',nose:'defined',skin:'original',jaw:'oval'};
   const amount = face.adjustments?.[key as 'eyes'];
@@ -42,7 +45,10 @@ function referenceHead(face: FaceSelections, hair: AvatarHair): PaintPath[] {
       x+=Math.sign(x-627)*cheeks*10*cheekField;y-=cheeks*11*cheekField;
       const lower=Math.max(0,Math.min(1,(y-661)/180));
       x+=Math.sign(x-627)*jaw*13*field(x,y,627,743,200,125);
-      y+=jaw*8*lower;
+      // Reshape the jaw between the cheeks and chin while keeping the chin
+      // itself fixed. Moving the terminal chin point made customized faces
+      // drift away from every body's neck/collar anchor.
+      y+=jaw*8*Math.sin(Math.PI*lower);
     }
     if(group===1){
       if(hair==='bob')y=650+(y-650)*0.44;
@@ -102,9 +108,15 @@ function referenceBody(look:AvatarLook,face:FaceSelections):PaintPath[]{
 
 export function buildCharacterDrawing({face,hair,look,graduation=false}:CharacterDrawingOptions):CharacterDrawing{
   const body=bodies[look];
-  // A uniform pose preserves the same face while matching the reference neck.
+  // Derive the head transform from the body's immutable source chin on every
+  // render. This avoids independent per-outfit offsets accumulating drift.
   const headScale=graduation?body.headScale*1.08:body.headScale;
-  const pose={scale:headScale,x:graduation?256-256*headScale:body.headOffset[0],y:graduation?body.headOffset[1]-7:body.headOffset[1]};
+  const bodyChin={x:body.chin[0]*body.scale+body.offset[0],y:body.chin[1]*body.scale+body.offset[1]};
+  const pose={
+    scale:headScale,
+    x:graduation?HEAD_LOCAL_X-HEAD_LOCAL_X*headScale:bodyChin.x-HEAD_LOCAL_X*headScale,
+    y:graduation?body.headOffset[1]-7:bodyChin.y-HEAD_CHIN_Y*headScale,
+  };
   const traced=referenceHead(face,hair).map(path=>({...path,pose}));
   const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back'),...(graduation?[]:referenceBody(look,face))];
   const p=(d:string,fill:string,stroke='none',width=0,head=false)=>paths.push({d,fill,stroke,width,group:'outfit',...(head?{pose}:{})});
@@ -162,7 +174,7 @@ export function buildCharacterDrawing({face,hair,look,graduation=false}:Characte
     p('M 337 39 Q 345 76 341 116','none','#c5a55a',2.4,true);
     p('M 335 111 L 347 111 L 344 145 L 338 145 Z','#c5a55a','#6f582d',1,true);
   }
-  return {paths,head:{x:256*pose.scale+pose.x,y:132*pose.scale+pose.y},headScale:pose.scale};
+  return {paths,head:{x:HEAD_LOCAL_X*pose.scale+pose.x,y:HEAD_FOCUS_Y*pose.scale+pose.y},headScale:pose.scale};
 }
 
 // The same drawing is projected into a full-body or face camera. The face camera
