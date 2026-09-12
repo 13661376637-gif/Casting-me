@@ -631,7 +631,7 @@ function AvatarCreator({ language, soundOn, onConfirm }: { language: Language; s
                 </div>
               </div>
               <div className="creator-score"><span>{language === 'en' ? 'FACE SCORE' : '面部数值'}</span><b>FAME +{faceScore.fame}</b><b>PRESSURE +{faceScore.pressure}</b><i>{visitedTools.length} / {toolRows.length} TOOLS</i></div>
-              <p className="creator-note">{language === 'en' ? 'Select a tool, then drag left / right on the face to adjust, or choose a preset. These are casting-system labels, not beauty standards.' : '选择工具后，在脸部左右拖动微调，也可点击预设。这些是选角系统施加的标签，不是审美标准。'}</p>
+              <p className="creator-note">{language === 'en' ? 'Select a tool: the cursor becomes that instrument. Press it to the face and drag left / right to adjust, or choose a preset. These are casting-system labels, not beauty standards.' : '选择工具后，鼠标会变成对应器械。把工具按在脸上左右拖动微调，也可点击预设。这些是选角系统施加的标签，不是审美标准。'}</p>
               <Button className="confirm-avatar-button" disabled={!faceReady} onClick={() => { ping(soundOn, 620); setStep(2); }}>{language === 'en' ? 'NEXT · HAIR & WARDROBE' : '下一步 · 发型与服装'} <ChevronRight /></Button>
             </>
           ) : (
