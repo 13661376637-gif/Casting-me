@@ -799,6 +799,15 @@ button { font: inherit; }
   bottom:-32vh;
 }
 
+/* Red-carpet two-shots use one physical stage ruler.  The protagonist's
+   vector canvas and Maya's artwork have different source aspect ratios, so
+   the generic centre close-up was deliberately larger.  In this scene they
+   share the same visual height and ground line instead. */
+.dialogue-scene.red-carpet-dialogue > .character-sprite.center {
+  height:min(106vh,1160px);
+  bottom:-30vh;
+}
+
 @media (max-width: 900px) {
   .dialogue-scene > .character-sprite {
     height:min(98vh,900px);
@@ -809,6 +818,10 @@ button { font: inherit; }
   .dialogue-scene > .character-sprite.center {
     height:min(103vh,940px);
     bottom:-28vh;
+  }
+  .dialogue-scene.red-carpet-dialogue > .character-sprite.center {
+    height:min(98vh,900px);
+    bottom:-26vh;
   }
 }
 
@@ -822,5 +835,9 @@ button { font: inherit; }
   .dialogue-scene > .character-sprite.center {
     height:88vh;
     bottom:-20vh;
+  }
+  .dialogue-scene.red-carpet-dialogue > .character-sprite.center {
+    height:82vh;
+    bottom:-18vh;
   }
 }

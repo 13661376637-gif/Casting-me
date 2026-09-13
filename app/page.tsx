@@ -685,7 +685,18 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
-  const sceneClass = isScriptChoice ? 'script-selection' : isAgentChoice ? 'agent-selection' : beat.showProjects ? 'with-projects' : beat.showRoleCard ? 'with-role-card' : '';
+  const isRedCarpetDialogue = background === '/backgrounds/premiere-media-wall.png';
+  const sceneClass = isScriptChoice
+    ? 'script-selection'
+    : isAgentChoice
+      ? 'agent-selection'
+      : beat.showProjects
+        ? 'with-projects'
+        : beat.showRoleCard
+          ? 'with-role-card'
+          : isRedCarpetDialogue
+            ? 'red-carpet-dialogue'
+            : '';
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
