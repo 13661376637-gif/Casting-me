@@ -63,38 +63,82 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
 export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, activeTool, onAdjust }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toolCursorRef = useRef<HTMLSpanElement>(null);
-  const dragRef = useRef<{ id: number; x: number; value: number; width: number; feature: FaceFeature } | null>(null);
+  const dragRef = useRef<{ id: number; x: number; value: number; lastValue: number; width: number; feature: FaceFeature } | null>(null);
+  const drawingRef = useRef<ReturnType<typeof buildCharacterDrawing> | null>(null);
+  const portraitRef = useRef(portrait);
+  const redrawRef = useRef<(() => void) | null>(null);
+  const onAdjustRef = useRef(onAdjust);
+  const adjustFrameRef = useRef<number | null>(null);
+  const queuedAdjustRef = useRef<{ feature: FaceFeature; value: number } | null>(null);
   const selection = face ?? DEFAULT_FACE;
   const drawing = useMemo(() => buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation }), [selection, hair, look, graduation]);
+  drawingRef.current = drawing;
+  portraitRef.current = portrait;
+  onAdjustRef.current = onAdjust;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const redraw = () => {
+      const nextDrawing = drawingRef.current;
+      if (!nextDrawing) return;
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(rect.width * ratio);
-      canvas.height = Math.round(rect.height * ratio);
+      const pixelWidth = Math.round(rect.width * ratio);
+      const pixelHeight = Math.round(rect.height * ratio);
+      if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+      if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
       const context = canvas.getContext('2d');
       if (!context) return;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      paintCharacter(context, drawing, rect.width, rect.height, portrait);
+      paintCharacter(context, nextDrawing, rect.width, rect.height, portraitRef.current);
     };
+    redrawRef.current = redraw;
     redraw();
     const observer = new ResizeObserver(redraw);
     observer.observe(canvas);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      redrawRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    redrawRef.current?.();
   }, [drawing, portrait]);
+
+  useEffect(() => () => {
+    if (adjustFrameRef.current !== null) cancelAnimationFrame(adjustFrameRef.current);
+  }, []);
 
   const editable = Boolean(activeTool && onAdjust);
   const currentValue = activeTool ? featureAmount(selection, activeTool) : 0;
+  const flushAdjustment = () => {
+    if (adjustFrameRef.current !== null) {
+      cancelAnimationFrame(adjustFrameRef.current);
+      adjustFrameRef.current = null;
+    }
+    const queued = queuedAdjustRef.current;
+    queuedAdjustRef.current = null;
+    if (queued) onAdjustRef.current?.(queued.feature, queued.value);
+  };
+  const queueAdjustment = (feature: FaceFeature, value: number) => {
+    queuedAdjustRef.current = { feature, value };
+    if (adjustFrameRef.current !== null) return;
+    adjustFrameRef.current = requestAnimationFrame(() => {
+      adjustFrameRef.current = null;
+      const queued = queuedAdjustRef.current;
+      queuedAdjustRef.current = null;
+      if (queued) onAdjustRef.current?.(queued.feature, queued.value);
+    });
+  };
   const moveToolCursor = (event: ReactPointerEvent<HTMLCanvasElement>, pressed?: boolean) => {
     const cursor = toolCursorRef.current;
     if (!cursor || event.pointerType === 'touch') return;
     const rect = event.currentTarget.getBoundingClientRect();
-    cursor.style.left = `${event.clientX - rect.left}px`;
-    cursor.style.top = `${event.clientY - rect.top}px`;
+    cursor.style.setProperty('--tool-x', `${event.clientX - rect.left}px`);
+    cursor.style.setProperty('--tool-y', `${event.clientY - rect.top}px`);
     cursor.classList.add('visible');
     cursor.classList.toggle('pressed', Boolean(pressed));
   };
@@ -125,27 +169,32 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
           event.preventDefault();
           moveToolCursor(event, true);
           const width = event.currentTarget.getBoundingClientRect().width;
-          dragRef.current = { id: event.pointerId, x: event.clientX, value: currentValue, width, feature: activeTool };
+          dragRef.current = { id: event.pointerId, x: event.clientX, value: currentValue, lastValue: currentValue, width, feature: activeTool };
           event.currentTarget.setPointerCapture(event.pointerId);
-          onAdjust(activeTool, currentValue);
+          onAdjustRef.current?.(activeTool, currentValue);
         }}
         onPointerMove={event => {
           const drag = dragRef.current;
           moveToolCursor(event, Boolean(drag));
-          if (!drag || drag.id !== event.pointerId || !onAdjust) return;
-          const value = drag.value + (event.clientX - drag.x) / Math.max(100, drag.width * 0.5);
-          onAdjust(drag.feature, Math.max(0, Math.min(1, value)));
+          if (!drag || drag.id !== event.pointerId) return;
+          event.preventDefault();
+          const value = Math.max(0, Math.min(1, drag.value + (event.clientX - drag.x) / Math.max(100, drag.width * 0.5)));
+          if (Math.abs(value - drag.lastValue) < 0.002) return;
+          drag.lastValue = value;
+          queueAdjustment(drag.feature, value);
         }}
         onPointerLeave={() => { if (!dragRef.current) hideToolCursor(); }}
         onPointerUp={event => {
           if (dragRef.current?.id !== event.pointerId) return;
+          flushAdjustment();
           dragRef.current = null;
           moveToolCursor(event);
           if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
         }}
-        onPointerCancel={() => { dragRef.current = null; hideToolCursor(); }}
+        onPointerCancel={() => { flushAdjustment(); dragRef.current = null; hideToolCursor(); }}
         onLostPointerCapture={() => {
           if (!dragRef.current) return;
+          flushAdjustment();
           dragRef.current = null;
           hideToolCursor();
         }}
