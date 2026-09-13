@@ -15,8 +15,10 @@ for(const [index,[look,file]] of Object.entries(files).entries()){
   const result=createCanvas(w,h),ctx=result.getContext('2d');
   ctx.setTransform(1/body.scale,0,0,1/body.scale,-body.offset[0]/body.scale,-body.offset[1]/body.scale);
   for(const path of drawing.paths.filter(p=>p.group==='body'||p.group==='outfit')){
+    if(path.clip){ctx.save();ctx.clip(new Path2D(path.clip));}
     const shape=new Path2D(path.d);ctx.fillStyle=path.fill;ctx.fill(shape);
     if(path.width){ctx.strokeStyle=path.stroke;ctx.lineWidth=path.width;ctx.stroke(shape);}
+    if(path.clip)ctx.restore();
   }
   const a=sc.getImageData(0,0,w,h).data,b=ctx.getImageData(0,0,w,h).data;let sum=0,n=0;
   for(let y=body.chin[1]+30;y<h-10;y++)for(let x=5;x<w-5;x++){

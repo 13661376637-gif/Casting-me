@@ -4,7 +4,7 @@ import bodies from './avatar-bodies.json' with { type: 'json' };
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.
 // No raster image is loaded, clipped or painted by the protagonist renderer.
-export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string };
+export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string; clip?: string };
 export type CharacterDrawing = { paths: PaintPath[]; head: { x: number; y: number }; headScale:number };
 export type CharacterDrawingOptions = { face: FaceSelections; hair: AvatarHair; look: AvatarLook; graduation?: boolean };
 
@@ -16,6 +16,7 @@ const mix = (a: string, b: string, t: number) => {
 const referenceCache = new Map<string, PaintPath[]>();
 const bodyCache = new Map<string, PaintPath[]>();
 const compiledPaths = new WeakMap<PaintPath, Map<typeof Path2D, Path2D>>();
+const compiledClips = new Map<string, Map<typeof Path2D, Path2D>>();
 const HEAD_LOCAL_X = 256;
 const HEAD_CHIN_Y = 216;
 const HEAD_FOCUS_Y = 132;
@@ -104,7 +105,7 @@ function referenceBody(look:AvatarLook,face:FaceSelections):PaintPath[]{
   for(const shape of body.shapes){
     const rgb=shape.rgb.map((c,i)=>{
       if(!shape.skin)return c;
-      const target=face.skin==='deep'?c*[0.73,0.65,0.58][i]:c*[0.97,1.025,1.1][i];
+      const target=face.skin==='deep'?c*[0.73,0.65,0.58][i]:c*[236/247,223/216,208/177][i];
       return Math.round(Math.min(255,c*(1-tone)+target*tone));
     });
     const fill=`rgb(${rgb.join(',')})`;
@@ -113,6 +114,30 @@ function referenceBody(look:AvatarLook,face:FaceSelections):PaintPath[]{
   bodyCache.set(key,paths);
   if(bodyCache.size>8)bodyCache.delete(bodyCache.keys().next().value!);
   return paths;
+}
+
+// The qipao reference contains its original lower jaw above the collar. Replace
+// that whole skin opening, including the old ink edge, with the editable head's
+// own neck. These source-space landmarks follow the INSIDE of the red collar;
+// they are not another head offset and never depend on facial parameters.
+function qipaoNeck(traced:PaintPath[],face:FaceSelections):PaintPath[] {
+  const body=bodies.qipao;
+  const sourcePath='M377 228L500 228L488 269L480 279L451 293L432 305L424 320L415 342L411 325L405 308L397 294L391 284Z';
+  const clip=sourcePath.replace(coordinatePattern,(_,command,x,y)=>`${command}${fixedCoordinate(Number(x)*body.scale+body.offset[0])} ${fixedCoordinate(Number(y)*body.scale+body.offset[1])}`);
+  const bridge='M404 303L449 293L432 320L415 344L408 325Z'.replace(coordinatePattern,(_,command,x,y)=>`${command}${fixedCoordinate(Number(x)*body.scale+body.offset[0])} ${fixedCoordinate(Number(y)*body.scale+body.offset[1])}`);
+  return [
+    {d:bridge,fill:mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',featureValue(face,'skin')),stroke:'none',width:0,group:'neck',clip},
+    ...traced.filter(path=>path.group==='reference-neck').map(path=>({...path,group:'neck',clip})),
+  ];
+}
+
+function qipaoGarment(face:FaceSelections):PaintPath[] {
+  const body=bodies.qipao;
+  // Retain the garment below its real inner collar, excluding every part of
+  // the source jaw and neck. The new neck is painted underneath this edge.
+  const boundary='M0 260L385 260L391 284L397 294L405 308L411 325L415 342L424 320L432 305L451 293L480 279L488 269L492 260L882 260L882 1783L0 1783Z';
+  const clip=boundary.replace(coordinatePattern,(_,command,x,y)=>`${command}${fixedCoordinate(Number(x)*body.scale+body.offset[0])} ${fixedCoordinate(Number(y)*body.scale+body.offset[1])}`);
+  return referenceBody('qipao',face).map(path=>({...path,clip}));
 }
 
 // The graduation costume is drawn in the same 512 × 1280 model space as the
@@ -192,7 +217,9 @@ export function buildCharacterDrawing({face,hair,look,graduation=false}:Characte
     paths.push(...graduationCap());
     return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};
   }
-  const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back'),...referenceBody(look,face)];
+  const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back')];
+  if(look==='qipao')paths.push(...qipaoNeck(traced,face),...qipaoGarment(face));
+  else paths.push(...referenceBody(look,face));
   for(const layer of ['scalp-base','face','jewelry','hair-front'])paths.push(...traced.filter(path=>path.group===layer));
   return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};
 }
@@ -224,8 +251,16 @@ export function paintCharacter(context: CanvasRenderingContext2D, drawing: Chara
     if(!variants){variants=new Map();compiledPaths.set(path,variants);}
     let shape=variants.get(Path);
     if(!shape){shape=new Path(path.d);variants.set(Path,shape);}
+    if(path.clip){
+      let clips=compiledClips.get(path.clip);
+      if(!clips){clips=new Map();compiledClips.set(path.clip,clips);}
+      let clip=clips.get(Path);
+      if(!clip){clip=new Path(path.clip);clips.set(Path,clip);}
+      context.save();context.clip(clip);
+    }
     if (path.fill !== 'none') { context.fillStyle = path.fill; context.fill(shape); }
     if (path.stroke !== 'none' && path.width > 0) { context.strokeStyle = path.stroke; context.lineWidth = path.width; context.stroke(shape); }
+    if(path.clip)context.restore();
   }
   context.restore();
 }
