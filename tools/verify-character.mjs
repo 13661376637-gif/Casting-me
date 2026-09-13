@@ -23,6 +23,21 @@ const pathMaxY = paths => {
   for (const path of paths) for (const match of path.d.matchAll(/[ML](-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)) maximum = Math.max(maximum, Number(match[2]));
   return maximum;
 };
+const normalizedHead = (paths, look) => {
+  const body = bodies[look];
+  const scale = body.headScale;
+  const chinX = body.chin[0] * body.scale + body.offset[0];
+  const chinY = body.chin[1] * body.scale + body.offset[1];
+  const x = chinX - 256 * scale;
+  const y = chinY - 216 * scale;
+  return paths.map(path => ({
+    ...path,
+    d: path.d.replace(/([ML])(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (_match, command, px, py) => {
+      return `${command}${Math.round(((Number(px) - x) / scale) * 100) / 100} ${Math.round(((Number(py) - y) / scale) * 100) / 100}`;
+    }),
+    width: Math.round((path.width / scale) * 100) / 100,
+  }));
+};
 const close = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 0.001, `${message}: ${actual} !== ${expected}`);
 const imageBytes = drawing => {
   const canvas = createCanvas(512, 1280);
@@ -58,33 +73,29 @@ checks += 2;
 // in camera projection; neither supplies a replacement portrait or face asset.
 for (const look of Object.keys(LOOK_HAIR)) {
   const candidate = buildCharacterDrawing({ face: muted, hair: LOOK_HAIR[look], look });
-  const canonical=paths=>paths.map(({pose,...path})=>path);
-  assert.deepEqual(canonical(group(candidate, 'face')), canonical(group(buildCharacterDrawing({ face: muted, hair: 'original', look: 'natural' }), 'face')), `${look} must preserve the saved face`);
+  assert.deepEqual(normalizedHead(group(candidate, 'face'), look), normalizedHead(group(buildCharacterDrawing({ face: muted, hair: 'original', look: 'natural' }), 'face'), 'natural'), `${look} must preserve the saved face`);
   for (const path of candidate.paths) assert.ok(!/NaN|Infinity/.test(path.d));
   const camera = characterCamera(420, 600, true,candidate);
   assert.equal(candidate.head.x * camera.scale + camera.x, 210);
   checks += 2;
 }
 
-// Every customizable head layer uses one transform, and the transform is
-// recomputed from the garment's source chin. Jaw editing may reshape the lower
-// face, but it must never move the terminal chin away from the body anchor.
+// Every customizable head layer is baked into the body's final coordinate
+// system. There is no independent runtime head transform that can lag, scale,
+// or move separately during a wardrobe or scene change.
 for (const look of Object.keys(LOOK_HAIR)) {
   const body = bodies[look];
   const targetX = body.chin[0] * body.scale + body.offset[0];
   const targetY = body.chin[1] * body.scale + body.offset[1];
   const base = buildCharacterDrawing({ face: natural, hair: LOOK_HAIR[look], look });
-  const basePose = group(base, 'face')[0].pose;
   const baseChinY = pathMaxY(group(base, 'face'));
   for (const amount of [0, 0.5, 1]) {
     const drawing = buildCharacterDrawing({ face: adjustFace(natural, 'jaw', amount), hair: LOOK_HAIR[look], look });
-    const posed = drawing.paths.filter(path => path.pose);
-    assert.equal(new Set(posed.map(path => path.pose)).size, 1, `${look}/${amount}: all head layers must share one transform`);
-    assert.deepEqual(posed[0].pose, basePose, `${look}/${amount}: face editing must not move the head transform`);
-    close(posed[0].pose.x + 256 * posed[0].pose.scale, targetX, `${look}/${amount}: horizontal neck anchor`);
-    close(posed[0].pose.y + 216 * posed[0].pose.scale, targetY, `${look}/${amount}: vertical neck anchor`);
+    assert.ok(drawing.paths.every(path => !Object.hasOwn(path, 'pose')), `${look}/${amount}: no path may retain an independent head transform`);
+    close(drawing.head.x, targetX, `${look}/${amount}: horizontal neck anchor`);
+    close(drawing.head.y + (216 - 132) * drawing.headScale, targetY, `${look}/${amount}: vertical neck anchor`);
     close(pathMaxY(group(drawing, 'face')), baseChinY, `${look}/${amount}: terminal chin position`);
-    checks += 5;
+    checks += 4;
   }
 }
 
@@ -117,5 +128,5 @@ graduationContext.fillStyle = '#d8d2e6';
 graduationContext.fillRect(0, 0, 512, 1280);
 paintCharacter(graduationContext, buildCharacterDrawing({ face: natural, hair: 'original', look: 'natural', graduation: true }), 512, 1280, false, Path2D);
 writeFileSync(join(output, 'graduation.png'), graduationCanvas.toBuffer('image/png'));
-console.log(`PASS: ${checks} checks covering isolated feature edits, fractional parameters, fixed body, shared face across outfits, and saved appearance round-trip.`);
+console.log(`PASS: ${checks} checks covering isolated feature edits, fractional parameters, unified head/body coordinates, shared face across outfits, and saved appearance round-trip.`);
 console.log(output);

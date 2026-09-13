@@ -14,7 +14,7 @@ for(const [index,[look,file]] of Object.entries(files).entries()){
   const [w,h]=body.sourceSize,source=createCanvas(w,h),sc=source.getContext('2d');sc.drawImage(await loadImage(`C:/Users/shang/AppData/Local/Temp/codex-clipboard-${file}.png`),0,0);
   const result=createCanvas(w,h),ctx=result.getContext('2d');
   ctx.setTransform(1/body.scale,0,0,1/body.scale,-body.offset[0]/body.scale,-body.offset[1]/body.scale);
-  for(const path of drawing.paths.filter(p=>!p.pose)){
+  for(const path of drawing.paths.filter(p=>p.group==='body'||p.group==='outfit')){
     const shape=new Path2D(path.d);ctx.fillStyle=path.fill;ctx.fill(shape);
     if(path.width){ctx.strokeStyle=path.stroke;ctx.lineWidth=path.width;ctx.stroke(shape);}
   }
@@ -33,8 +33,10 @@ for(const [index,[look,file]] of Object.entries(files).entries()){
 // Sample the old seam in canonical reference coordinates across all variants.
 for(const skin of ['original','porcelain','deep'])for(const hair of Object.values(LOOK_HAIR)){
   const drawing=buildCharacterDrawing({look:'natural',hair,face:{...DEFAULT_FACE,skin}});
-  const canvas=createCanvas(1254,1254),ctx=canvas.getContext('2d');ctx.setTransform(1/.245,0,0,1/.245,627-256/.245,48-20/.245);
-  for(const path of drawing.paths.filter(p=>p.pose)){ctx.fillStyle=path.fill;ctx.fill(new Path2D(path.d));}
+  const canvas=createCanvas(1254,1254),ctx=canvas.getContext('2d');
+  const body=bodies.natural,scale=body.headScale,chinX=body.chin[0]*body.scale+body.offset[0],chinY=body.chin[1]*body.scale+body.offset[1];
+  ctx.setTransform(1/scale/.245,0,0,1/scale/.245,(627-256/.245)-(chinX-256*scale)/scale/.245,(48-20/.245)-(chinY-216*scale)/scale/.245);
+  for(const path of drawing.paths.filter(p=>!['body','outfit'].includes(p.group))){ctx.fillStyle=path.fill;ctx.fill(new Path2D(path.d));}
   for(const [x,y] of [[711,285],[737,299],[755,313],[779,338],[800,375]])assert.equal(ctx.getImageData(x,y,1,1).data[3],255,`${skin}/${hair}: forehead must have solid coverage`);
 }
 mkdirSync('work/character-verification',{recursive:true});writeFileSync('work/character-verification/reference-body-render.png',sheet.toBuffer('image/png'));

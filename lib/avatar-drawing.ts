@@ -4,7 +4,7 @@ import bodies from './avatar-bodies.json' with { type: 'json' };
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.
 // No raster image is loaded, clipped or painted by the protagonist renderer.
-export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string; pose?: {scale:number;x:number;y:number} };
+export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string };
 export type CharacterDrawing = { paths: PaintPath[]; head: { x: number; y: number }; headScale:number };
 export type CharacterDrawingOptions = { face: FaceSelections; hair: AvatarHair; look: AvatarLook; graduation?: boolean };
 
@@ -19,6 +19,15 @@ const compiledPaths = new WeakMap<PaintPath, Map<typeof Path2D, Path2D>>();
 const HEAD_LOCAL_X = 256;
 const HEAD_CHIN_Y = 216;
 const HEAD_FOCUS_Y = 132;
+const coordinatePattern = /([ML])(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g;
+const fixedCoordinate = (value:number) => Math.round(value * 1000) / 1000;
+const bakeHeadPath = (path:PaintPath, scale:number, x:number, y:number):PaintPath => ({
+  ...path,
+  // Head contours are converted once into the final 512 × 1280 model space.
+  // The renderer therefore never moves the face independently from the body.
+  d:path.d.replace(coordinatePattern,(_,command,px,py)=>`${command}${fixedCoordinate(Number(px)*scale+x)} ${fixedCoordinate(Number(py)*scale+y)}`),
+  width:fixedCoordinate(path.width*scale),
+});
 const featureValue = (face: FaceSelections, key: string) => {
   const defaults: Record<string,string> = {eyes:'natural',cheekbones:'soft',nose:'defined',skin:'original',jaw:'oval'};
   const amount = face.adjustments?.[key as 'eyes'];
@@ -174,21 +183,18 @@ export function buildCharacterDrawing({face,hair,look,graduation=false}:Characte
   // render. This avoids independent per-outfit offsets accumulating drift.
   const headScale=body.headScale;
   const bodyChin={x:body.chin[0]*body.scale+body.offset[0],y:body.chin[1]*body.scale+body.offset[1]};
-  const pose={
-    scale:headScale,
-    x:bodyChin.x-HEAD_LOCAL_X*headScale,
-    y:bodyChin.y-HEAD_CHIN_Y*headScale,
-  };
-  const traced=referenceHead(face,hair).map(path=>({...path,pose}));
+  const headX=bodyChin.x-HEAD_LOCAL_X*headScale;
+  const headY=bodyChin.y-HEAD_CHIN_Y*headScale;
+  const traced=referenceHead(face,hair).map(path=>bakeHeadPath(path,headScale,headX,headY));
   if(graduation){
     const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back'),...graduationBody(face)];
     for(const layer of ['scalp-base','face','jewelry','hair-front'])paths.push(...traced.filter(path=>path.group===layer));
     paths.push(...graduationCap());
-    return {paths,head:{x:HEAD_LOCAL_X*pose.scale+pose.x,y:HEAD_FOCUS_Y*pose.scale+pose.y},headScale:pose.scale};
+    return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};
   }
   const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back'),...referenceBody(look,face)];
   for(const layer of ['scalp-base','face','jewelry','hair-front'])paths.push(...traced.filter(path=>path.group===layer));
-  return {paths,head:{x:HEAD_LOCAL_X*pose.scale+pose.x,y:HEAD_FOCUS_Y*pose.scale+pose.y},headScale:pose.scale};
+  return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};
 }
 
 // The same drawing is projected into a full-body or face camera. The face camera
@@ -218,10 +224,8 @@ export function paintCharacter(context: CanvasRenderingContext2D, drawing: Chara
     if(!variants){variants=new Map();compiledPaths.set(path,variants);}
     let shape=variants.get(Path);
     if(!shape){shape=new Path(path.d);variants.set(Path,shape);}
-    if(path.pose){context.save();context.translate(path.pose.x,path.pose.y);context.scale(path.pose.scale,path.pose.scale);}
     if (path.fill !== 'none') { context.fillStyle = path.fill; context.fill(shape); }
     if (path.stroke !== 'none' && path.width > 0) { context.strokeStyle = path.stroke; context.lineWidth = path.width; context.stroke(shape); }
-    if(path.pose)context.restore();
   }
   context.restore();
 }

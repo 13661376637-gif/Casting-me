@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { buildCharacterDrawing, paintCharacter } from '@/lib/avatar-drawing';
 import { DEFAULT_FACE, featureAmount, LOOK_HAIR } from '@/lib/avatar-model';
@@ -72,11 +72,8 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
   const queuedAdjustRef = useRef<{ feature: FaceFeature; value: number } | null>(null);
   const selection = face ?? DEFAULT_FACE;
   const drawing = useMemo(() => buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation }), [selection, hair, look, graduation]);
-  drawingRef.current = drawing;
-  portraitRef.current = portrait;
-  onAdjustRef.current = onAdjust;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const redraw = () => {
@@ -104,9 +101,12 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    drawingRef.current = drawing;
+    portraitRef.current = portrait;
+    onAdjustRef.current = onAdjust;
     redrawRef.current?.();
-  }, [drawing, portrait]);
+  }, [drawing, portrait, onAdjust]);
 
   useEffect(() => () => {
     if (adjustFrameRef.current !== null) cancelAnimationFrame(adjustFrameRef.current);
