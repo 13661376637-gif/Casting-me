@@ -121,8 +121,12 @@ function useFullscreenUiScale(baseWidth: number, baseHeight: number) {
 
       const edgeGap = 16;
       const topBarHeight = 72;
-      const availableWidth = Math.max(320, window.innerWidth - edgeGap * 2);
-      const availableHeight = Math.max(320, window.innerHeight - topBarHeight - edgeGap * 2);
+      // Keep full-screen cards inside the same 16:10 stage as the game, not
+      // inside the browser's potentially wider or taller outer viewport.
+      const stageWidth = Math.min(window.innerWidth, window.innerHeight * 1.6);
+      const stageHeight = Math.min(window.innerHeight, window.innerWidth * .625);
+      const availableWidth = Math.max(320, stageWidth - edgeGap * 2);
+      const availableHeight = Math.max(320, stageHeight - topBarHeight - edgeGap * 2);
       setScale(Math.min(availableWidth / baseWidth, availableHeight / baseHeight));
     };
 
