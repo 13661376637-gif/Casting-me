@@ -346,6 +346,14 @@ button { font: inherit; }
 /* Dialogue scenes */
 .dialogue-scene { position:relative; min-height:100cqh; overflow:hidden; padding-top:72px; }
 .dialogue-scene.has-background { background-position:center; background-size:cover; background-repeat:no-repeat; }
+.filming-character { position:absolute; z-index:5; height:78cqh; width:54.85cqh; left:50%; bottom:8cqh; transform:translateX(-50%); pointer-events:none; }
+.filming-scene .set-dressing { z-index:7; }
+.film-success-card { position:absolute; z-index:8; top:26cqh; left:5cqw; width:24cqw; padding:2cqw; background:var(--cream,#eee6d4); color:var(--ink,#202b3b); }
+.film-success-card p { font-size:1cqw; letter-spacing:.12em; color:#b33163; font-weight:800; }
+.film-success-card h2 { font-size:2.3cqw; margin:.7cqh 0 2cqh; }
+.film-success-card strong { display:block; font-size:5cqw; line-height:1.1; }
+.film-success-card span,.film-success-card small { display:block; margin:1.5cqh 0; font-size:.9cqw; font-weight:700; }
+.film-success-card b { display:inline-block; padding:.7cqh 1cqw; background:#b33163; color:#fff; font-size:1.2cqw; }
 .dialogue-scene::after { content:""; position:absolute; inset:72px 0 0; z-index:0; background:linear-gradient(90deg,rgba(32,43,59,.18),transparent 26%,transparent 72%,rgba(32,43,59,.18)); pointer-events:none; }
 .scene-firstRead .dialogue-scene::before { background:linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(#cfd5db,#a7b3bb 72%,#717d84 72%); background-size:68px 100%,auto; }
 .scene-lookTest .dialogue-scene::before { background:linear-gradient(105deg,#751f3a 0 44%,#e8d9c6 44.3% 100%); }

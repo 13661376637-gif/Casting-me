@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   ArrowLeft,
@@ -23,11 +23,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CharacterCanvas } from '@/components/character-canvas';
+import { preloadActionDrawings } from '@/lib/avatar-drawing';
 import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance } from '@/lib/avatar-model';
 import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as FeatureKey, FaceSelections, CharacterAppearance } from '@/lib/avatar-model';
 
 type Language = 'en' | 'zh';
-type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'redCarpet' | 'ending';
+type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'filming' | 'redCarpet' | 'ending';
 type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'richard' | 'david' | 'claire' | 'maya';
 
 type FaceOption = {
@@ -56,6 +57,8 @@ type Beat = {
   showProjects?: boolean;
   showRoleCard?: boolean;
   tag?: string;
+  actionPose?: 'crossed' | 'guard';
+  filmSuccess?: boolean;
 };
 
 const BACKGROUND_ASSETS = [
@@ -66,6 +69,7 @@ const BACKGROUND_ASSETS = [
   '/backgrounds/magazine-studio.png',
   '/backgrounds/agency-meeting-room.png',
   '/backgrounds/premiere-media-wall.png',
+  '/backgrounds/snow-courtyard-set-v40.png',
 ] as const;
 
 function useBackgroundPreload() {
@@ -333,10 +337,14 @@ const locked: Beat[] = [
   { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: "They've seen the market response.", zh: '他们看过市场反应。', left: 'linDragon', right: 'claire', showProjects: true, tag: 'SCRIPT LOCKED · NIGHT ORCHID' },
 ];
 
+const filming: Beat[] = [
+  { speakerEn: 'DIRECTOR', speakerZh: '导演', en: 'Night Orchid. Snow courtyard, take one. Hold the crossed guard… action!', zh: '《夜兰》，雪庭，第一条。刀鞘交叉，定住——开拍！', actionPose:'crossed', tag:'NIGHT ORCHID · ON SET / TAKE 01' },
+  { speakerEn: 'ACTION DIRECTOR', speakerZh: '动作指导', en: 'Open the guard. Settle your weight, keep the blade steady. Let the camera see the decision.', zh: '落刀收势，站稳重心。刀锋别晃，让镜头看见你的决心。', actionPose:'guard', tag:'NIGHT ORCHID · ON SET / TAKE 02' },
+  { speakerEn: 'DIRECTOR', speakerZh: '导演', en: 'Cut. We have it. That is our final shot.', zh: '停。过了。这就是我们要的最后一个镜头。', actionPose:'guard', tag:'NIGHT ORCHID · PICTURE WRAPPED' },
+  { speakerEn: 'OPENING WEEKEND', speakerZh: '首周末战报', en: 'Night Orchid is a hit. Opening weekend doubles the forecast; sequel talks begin. Lin’s performance is now seen around the world.', zh: '《夜兰》大获成功。首周末票房达到预测的两倍，续集洽谈启动。林的表演终于被世界看见。', actionPose:'crossed', filmSuccess:true, tag:'FILM SUCCESS · FAME +5' },
+];
+
 const redCarpet: Beat[] = [
-  { speakerEn: 'PROCESS CARD 01', speakerZh: '过程图 01', en: 'The fight test: precise, controlled, internationally legible.', zh: '动作测试：精准、冷静、可国际发行。', center: 'linDragon', tag: 'NIGHT ORCHID · FIGHT TEST' },
-  { speakerEn: 'PROCESS CARD 02', speakerZh: '过程图 02', en: "The global poster keeps Lin's raised chin, blade silhouette, and the English title.", zh: '全球版海报只保留林抬起的下巴、短刃轮廓与英文片名。', center: 'linDragon', tag: 'GLOBAL POSTER · NIGHT ORCHID' },
-  { speakerEn: 'PROCESS CARD 03', speakerZh: '过程图 03', en: 'Opening weekend exceeds forecasts. Reviews repeat: icy, dangerous, mysterious.', zh: '首周末票房超过预测；评论高频词是：冰冷、危险、神秘。', center: 'linDragon', tag: 'OPENING WEEKEND · ABOVE FORECAST' },
   { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'Opening weekend doubled the forecast. A sequel and two brand offers are already in discussion.', zh: '首周末超过预测一倍。续集和两个品牌邀约都在谈。', center: 'linDragon', right: 'claire' },
   { speakerEn: 'LIN', speakerZh: '林', en: 'Did any review mention Anna?', zh: '评论里有人提到 Anna 吗？', center: 'linDragon', right: 'claire' },
   { speakerEn: 'CLAIRE', speakerZh: '克莱尔', en: 'They mentioned you.', zh: '他们提到了你。', center: 'linDragon', right: 'claire' },
@@ -349,8 +357,8 @@ const redCarpet: Beat[] = [
   { speakerEn: 'REPORTER 2', speakerZh: '记者 2', en: "Don't move! Hold that!", zh: '别动！就保持这个！', center: 'linDragon', right: 'maya', flash: true },
 ];
 
-const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, redCarpet };
-const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', redCarpet: 'ending' };
+const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, filming, redCarpet };
+const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', filming:'redCarpet', redCarpet: 'ending' };
 
 function getSceneBackground(screen: Screen, beatIndex: number) {
   if (screen === 'prologue') return beatIndex < 3 ? '/backgrounds/university-campus.png' : '/backgrounds/audition-room.png';
@@ -358,6 +366,7 @@ function getSceneBackground(screen: Screen, beatIndex: number) {
   if (screen === 'lookTest') return '/backgrounds/night-apartment.png';
   if (screen === 'callback') return beatIndex < 15 ? '/backgrounds/western-restaurant.png' : '/backgrounds/magazine-studio.png';
   if (screen === 'locked') return '/backgrounds/agency-meeting-room.png';
+  if (screen === 'filming') return '/backgrounds/snow-courtyard-set-v40.png';
   if (screen === 'redCarpet') return '/backgrounds/premiere-media-wall.png';
   return undefined;
 }
@@ -365,6 +374,7 @@ function getSceneBackground(screen: Screen, beatIndex: number) {
 const stageInfo: Record<Screen, { index: string; label: string }> = {
   title: { index: '00', label: 'CASTING ME' }, creator: { index: '02B', label: 'FACE EDITOR' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
   firstRead: { index: '01', label: 'DOWNFALL' }, lookTest: { index: '02A', label: 'CHOOSE AN AGENT' }, training: { index: '04B', label: 'TRAINING TRADE-OFF' },
+  filming: { index:'04C', label:'NIGHT ORCHID / ON SET' },
   callback: { index: '02C–03', label: 'DINNER / REFRAME' }, locked: { index: '04A', label: 'THREE SCRIPTS' }, redCarpet: { index: '04C–D', label: 'SUCCESS / RED CARPET' }, ending: { index: 'END', label: 'SUCCESS REGISTERED' },
 };
 
@@ -396,6 +406,7 @@ export default function Home() {
   const [trainingDone, setTrainingDone] = useState<string[]>([]);
   const [hudPulse, setHudPulse] = useState(false);
   const [appearance, setAppearance] = useState<CharacterAppearance | null>(null);
+  const filmRewarded = useRef(false);
   const readyBackgrounds = useBackgroundPreload();
   const avatar: AvatarKey = appearance?.hair ?? 'original';
   const lockedLook = appearance?.look ?? null;
@@ -408,6 +419,19 @@ export default function Home() {
     ?? (screen === 'profile' ? '/backgrounds/university-campus.png' : undefined)
     ?? (screen === 'ending' ? '/backgrounds/premiere-media-wall.png' : undefined);
   const backgroundReady = !activeBackground || readyBackgrounds.has(activeBackground);
+  useEffect(()=>{
+    if(screen==='locked'||screen==='training')void preloadActionDrawings().catch(()=>{});
+  },[screen]);
+
+  useEffect(() => {
+    if (screen !== 'filming' || !beat?.filmSuccess || filmRewarded.current) return;
+    filmRewarded.current = true;
+    setFame(value => value + 5);
+    setResolved(value => [...value, 'film-success']);
+    setHudPulse(true);
+    const timer = window.setTimeout(() => setHudPulse(false), 650);
+    return () => window.clearTimeout(timer);
+  }, [screen, beat?.filmSuccess]);
 
   useEffect(() => {
     setChoiceReady(false);
@@ -423,7 +447,7 @@ export default function Home() {
   }, [beatIndex, beat?.flash, soundOn]);
 
   const progress = useMemo(() => {
-    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'creator', 'callback', 'locked', 'training', 'redCarpet', 'ending'];
+    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'creator', 'callback', 'locked', 'training', 'filming', 'redCarpet', 'ending'];
     return Math.max(0, Math.round(((order.indexOf(screen) + 1) / order.length) * 100));
   }, [screen]);
 
@@ -458,6 +482,7 @@ export default function Home() {
   };
 
   const restart = () => {
+    filmRewarded.current = false;
     setScreen('title'); setBeatIndex(0); setFame(0); setPressure(0); setResolved([]); setTrainingDone([]); setChoiceNotice(''); setAppearance(null);
     try { window.localStorage.removeItem('casting-me-character-v18'); } catch { /* The fresh in-session state is already reset. */ }
   };
@@ -480,13 +505,7 @@ export default function Home() {
   };
 
   const completeTraining = () => {
-    if (!resolved.includes('film-success')) {
-      setFame((value) => value + 5);
-      setResolved((value) => [...value, 'film-success']);
-      setHudPulse(true);
-      window.setTimeout(() => setHudPulse(false), 650);
-    }
-    moveTo('redCarpet');
+    moveTo('filming');
   };
 
   return (
@@ -686,6 +705,7 @@ function ProfileScreen({ language, avatar, fame, pressure, backgroundReady, onCo
 }
 
 function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, backgroundReady, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; backgroundReady: boolean; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
+  const [actionReady,setActionReady]=useState(false);
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -702,8 +722,10 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
             ? 'red-carpet-dialogue'
             : '';
   return (
-    <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
+    <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass} ${beat.actionPose ? 'filming-scene' : ''}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
+      {backgroundReady && beat.actionPose && <CharacterCanvas face={lockedFace} hair={avatar} look="qipao" actionPose={beat.actionPose} onReady={setActionReady} className="filming-character" label={language === 'en' ? 'Lin performing Night Orchid' : '林正在拍摄《夜兰》'} />}
+      {beat.filmSuccess && <aside className="film-success-card" role="status"><p>{language === 'en' ? 'FILM SUCCESS' : '电影大获成功'}</p><h2>NIGHT ORCHID</h2><strong>2×</strong><span>{language === 'en' ? 'OPENING WEEKEND FORECAST' : '首周末票房 · 预测的两倍'}</span><b>FAME +5</b><small>{language === 'en' ? 'SEQUEL TALKS UNDERWAY' : '续集洽谈启动'}</small></aside>}
       {backgroundReady && !isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
       {backgroundReady && !isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
       {backgroundReady && !isFullScreenChoice && beat.right && <Sprite sprite={beat.right} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="right" />}
@@ -720,8 +742,8 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
       ) : (
         <div className="dialogue-shell">
           <span className="speaker-tag">{language === 'en' ? beat.speakerEn : beat.speakerZh}</span>
-          <button className="dialogue-box" onClick={onAdvance} aria-label="Continue dialogue">
-            <span className="dialogue-text">{language === 'en' ? beat.en : beat.zh}</span>
+          <button className="dialogue-box" onClick={onAdvance} disabled={Boolean(beat.actionPose)&&(!backgroundReady||!actionReady)} aria-label="Continue dialogue">
+            <span className="dialogue-text">{beat.actionPose&&(!backgroundReady||!actionReady)?(language==='en'?'Preparing the set…':'片场准备中……'):(language === 'en' ? beat.en : beat.zh)}</span>
             <span className="dialogue-next"><ChevronRight /></span>
           </button>
         </div>

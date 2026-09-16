@@ -1,12 +1,20 @@
 import type { AvatarHair, AvatarLook, FaceSelections } from './avatar-model';
 import reference from './avatar-reference.json' with { type: 'json' };
 import bodies from './avatar-bodies.json' with { type: 'json' };
+type ActionReference = {scale:number;offset:number[];chin:number[];eyes:number[];shapes:{d:string;rgb:number[];skin:boolean}[]};
+let actions:Record<ActionPose,ActionReference>|null=null;
+let actionLoad:Promise<void>|null=null;
+export function preloadActionDrawings():Promise<void> {
+  if(actions)return Promise.resolve();
+  return actionLoad??=import('./avatar-action.json',{with:{type:'json'}}).then(module=>{actions=module.default;}).catch(error=>{actionLoad=null;throw error;});
+}
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.
 // No raster image is loaded, clipped or painted by the protagonist renderer.
 export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string; clip?: string };
-export type CharacterDrawing = { paths: PaintPath[]; head: { x: number; y: number }; headScale:number };
-export type CharacterDrawingOptions = { face: FaceSelections; hair: AvatarHair; look: AvatarLook; graduation?: boolean };
+export type ActionPose = 'crossed' | 'guard';
+export type CharacterDrawing = { paths: PaintPath[]; head: { x: number; y: number }; headScale:number; actionPose?:ActionPose };
+export type CharacterDrawingOptions = { face: FaceSelections; hair: AvatarHair; look: AvatarLook; graduation?: boolean; actionPose?:ActionPose };
 
 const mix = (a: string, b: string, t: number) => {
   const channels = [1, 3, 5].map(i => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t));
@@ -202,7 +210,40 @@ function graduationCap(): PaintPath[] {
   ];
 }
 
-export function buildCharacterDrawing({face,hair,look,graduation=false}:CharacterDrawingOptions):CharacterDrawing{
+function actionDrawing(face:FaceSelections,pose:ActionPose):CharacterDrawing {
+  if(!actions)throw new Error('Preload action contours before drawing.');
+  const action=actions[pose];
+  const tone=featureValue(face,'skin');
+  const headScale=(action.chin[1]-action.eyes[1])/333*action.scale/.245;
+  const chin={x:256,y:action.chin[1]*action.scale+action.offset[1]};
+  const headY=chin.y-216*headScale;
+  // The film costume includes long waves. Its native face contours respond to
+  // the same saved controls; the complete source neck remains in one rig.
+  const field=(x:number,y:number,cx:number,cy:number,rx:number,ry:number)=>Math.max(0,1-((x-cx)/rx)**2-((y-cy)/ry)**2)**2;
+  const shapes:PaintPath[]=action.shapes.map(shape=>{
+    const rgb=shape.rgb.map((c,i)=>shape.skin?Math.round(Math.min(255,c*(1-tone)+c*(face.skin==='deep'?[.73,.65,.58][i]:[236/247,223/216,208/177][i])*tone)):c);
+    let d=shape.d;
+    d=d.replace(coordinatePattern,(_,cmd,px,py)=>{
+      const faceScale=(action.chin[1]-action.eyes[1])/83;
+      let x=637+((Number(px)-action.offset[0])/action.scale-action.eyes[0])/faceScale;
+      let y=475+((Number(py)-action.offset[1])/action.scale-action.eyes[1])/faceScale;
+      const eyes=field(x,y,604,476,30,24)+field(x,y,678,476,30,24);
+      y+=featureValue(face,'eyes')*(479-y)*.4*eyes;
+      const nose=field(x,y,643,508,25,28);x+=(x-643)*featureValue(face,'nose')*.23*nose;
+      const cheek=field(x,y,593,511,25,27)+field(x,y,690,511,25,27);
+      x+=Math.sign(x-643)*featureValue(face,'cheekbones')*3*cheek;y-=featureValue(face,'cheekbones')*3*cheek;
+      x+=Math.sign(x-643)*featureValue(face,'jaw')*4*field(x,y,643,536,67,23);
+      x=action.eyes[0]+(x-637)*faceScale;y=action.eyes[1]+(y-475)*faceScale;
+      return `${cmd}${fixedCoordinate(x*action.scale+action.offset[0])} ${fixedCoordinate(y*action.scale+action.offset[1])}`;
+    });
+    const fill=`rgb(${rgb.join(',')})`;
+    return {d,fill,stroke:fill,width:.3,group:shape.skin?'action-skin':'action-costume'};
+  });
+  return {paths:shapes,head:{x:256,y:132*headScale+headY},headScale,actionPose:pose};
+}
+
+export function buildCharacterDrawing({face,hair,look,graduation=false,actionPose}:CharacterDrawingOptions):CharacterDrawing{
+  if(actionPose)return actionDrawing(face,actionPose);
   const body=graduation?bodies.natural:bodies[look];
   // Derive the head transform from the body's immutable source chin on every
   // render. This avoids independent per-outfit offsets accumulating drift.
@@ -226,7 +267,7 @@ export function buildCharacterDrawing({face,hair,look,graduation=false}:Characte
 
 // The same drawing is projected into a full-body or face camera. The face camera
 // is an affine crop of the full model, not another portrait asset.
-export function characterCamera(width: number, height: number, portrait: boolean, drawing?:Pick<CharacterDrawing,'head'|'headScale'>) {
+export function characterCamera(width: number, height: number, portrait: boolean, drawing?:Pick<CharacterDrawing,'head'|'headScale'|'actionPose'>) {
   if (portrait) {
     // Keep the editor centered on the face while leaving enough upper torso in
     // frame for the head, neck and shoulders to read as one proportioned model.
@@ -234,7 +275,7 @@ export function characterCamera(width: number, height: number, portrait: boolean
     const head=drawing?.head??{x:256,y:132};
     return { scale, x: width / 2 - head.x * scale, y: height * 0.4 - head.y * scale };
   }
-  const scale = Math.min(width / 512, height / 1280);
+  const scale = Math.min(width / (drawing?.actionPose?1050:512), height / (drawing?.actionPose?1600:1280));
   return { scale, x: (width - 512 * scale) / 2, y: height - 1280 * scale };
 }
 

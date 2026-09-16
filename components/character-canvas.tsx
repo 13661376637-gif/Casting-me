@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { buildCharacterDrawing, paintCharacter } from '@/lib/avatar-drawing';
+import { buildCharacterDrawing, paintCharacter, preloadActionDrawings } from '@/lib/avatar-drawing';
+import type { ActionPose } from '@/lib/avatar-drawing';
 import { DEFAULT_FACE, featureAmount, LOOK_HAIR } from '@/lib/avatar-model';
 import type { AvatarHair, AvatarLook, FaceFeature, FaceSelections } from '@/lib/avatar-model';
 
@@ -15,6 +16,8 @@ type Props = {
   portrait?: boolean;
   decorative?: boolean;
   graduation?: boolean;
+  actionPose?: ActionPose;
+  onReady?: (ready:boolean) => void;
   activeTool?: FaceFeature;
   onAdjust?: (feature: FaceFeature, value: number) => void;
 };
@@ -60,7 +63,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
   );
 }
 
-export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, activeTool, onAdjust }: Props) {
+export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, actionPose, onReady, activeTool, onAdjust }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toolCursorRef = useRef<HTMLSpanElement>(null);
   const dragRef = useRef<{ id: number; x: number; value: number; lastValue: number; width: number; feature: FaceFeature } | null>(null);
@@ -71,7 +74,15 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
   const adjustFrameRef = useRef<number | null>(null);
   const queuedAdjustRef = useRef<{ feature: FaceFeature; value: number } | null>(null);
   const selection = face ?? DEFAULT_FACE;
-  const drawing = useMemo(() => buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation }), [selection, hair, look, graduation]);
+  const [actionReady,setActionReady]=useState(false);
+  useEffect(()=>{
+    if(!actionPose)return;
+    let active=true;
+    preloadActionDrawings().then(()=>{if(active)setActionReady(true);}).catch(()=>{if(active)setActionReady(false);});
+    return ()=>{active=false;};
+  },[actionPose]);
+  const drawing = useMemo(() => actionPose&&!actionReady?null:buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation, actionPose }), [selection, hair, look, graduation, actionPose,actionReady]);
+  useEffect(()=>{onReady?.(Boolean(drawing));},[drawing,onReady]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
