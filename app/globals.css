@@ -894,6 +894,24 @@ button { font: inherit; }
   .training-screen .training-tokens button em { position:static; grid-column:2; justify-self:start; transform:none; }
 }
 
+/* User-approved intact graduation artwork, isolated from editable avatars.
+   Intrinsic aspect ratio and one transform preserve head/body registration. */
+.dialogue-scene > .graduation-portrait {
+  position:absolute;
+  z-index:5;
+  left:50%;
+  top:max(160px,12cqh);
+  height:min(114cqh,1800px);
+  width:auto;
+  max-width:none;
+  aspect-ratio:1386 / 2080;
+  transform:translateX(-50%);
+  object-fit:contain;
+  image-rendering:auto;
+  pointer-events:none;
+  user-select:none;
+}
+
 /* Dialogue portrait framing: reference-style two-shot, with the box across both waists. */
 .dialogue-scene > .character-sprite {
   height:min(106cqh,1160px);

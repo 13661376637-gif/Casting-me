@@ -59,8 +59,12 @@ type Beat = {
   tag?: string;
   actionPose?: 'crossed' | 'guard';
   filmSuccess?: boolean;
+  graduationPortrait?: boolean;
 };
 
+// The user approved this complete supplied portrait for the pre-customization
+// graduation beat only. Never substitute it for the editable in-game character.
+const GRADUATION_PORTRAIT_SRC = '/characters/lin-graduation-reference-v41.png';
 const BACKGROUND_ASSETS = [
   '/backgrounds/university-campus.png',
   '/backgrounds/audition-room.png',
@@ -71,16 +75,17 @@ const BACKGROUND_ASSETS = [
   '/backgrounds/premiere-media-wall.png',
   '/backgrounds/snow-courtyard-set-v40.png',
 ] as const;
+const PRELOAD_ASSETS = [...BACKGROUND_ASSETS, GRADUATION_PORTRAIT_SRC];
 
 function useBackgroundPreload() {
   const [readyBackgrounds, setReadyBackgrounds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let cancelled = false;
-    const images = BACKGROUND_ASSETS.map((src, index) => {
+    const images = PRELOAD_ASSETS.map((src, index) => {
       const image = new Image();
       image.decoding = 'async';
-      image.fetchPriority = index < 2 ? 'high' : 'auto';
+      image.fetchPriority = index < 2 || src === GRADUATION_PORTRAIT_SRC ? 'high' : 'auto';
 
       const markReady = () => {
         if (cancelled) return;
@@ -250,7 +255,7 @@ const choice06: ChoiceSet = {
 
 const prologue: Beat[] = [
   { speakerEn: 'ACTING SCHOOL', speakerZh: '表演学校', en: 'She spent four years learning how to understand different people.', zh: '她用四年学习如何理解不同的人。', center: 'linNatural', tag: 'PANEL 01 / ACTING SCHOOL' },
-  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'She believed the work would eventually speak for itself.', zh: '她相信，演技最终会说话。', center: 'linNatural', tag: 'PANEL 02 / CLASS OF 2026' },
+  { speakerEn: 'GRADUATION', speakerZh: '毕业', en: 'She believed the work would eventually speak for itself.', zh: '她相信，演技最终会说话。', graduationPortrait: true, tag: 'PANEL 02 / CLASS OF 2026' },
   { speakerEn: 'HOLLYWOOD', speakerZh: '好莱坞', en: 'New roles are created here every day—and familiar faces are searched for again and again.', zh: '这里每天都产生新角色，也反复寻找熟悉的面孔。', center: 'linNatural', tag: 'PANEL 03 / LOS ANGELES' },
   { speakerEn: 'FIRST CALL', speakerZh: '第一次机会', en: 'She thought the first step into the industry was proving she could play a complete person.', zh: '她以为进入行业的第一步，是证明自己能演一个完整的人。', center: 'linNatural', tag: '“I WANT TO PLAY A PERSON, NOT A CATEGORY.”' },
 ];
@@ -418,7 +423,8 @@ export default function Home() {
   const activeBackground = sceneBackground
     ?? (screen === 'profile' ? '/backgrounds/university-campus.png' : undefined)
     ?? (screen === 'ending' ? '/backgrounds/premiere-media-wall.png' : undefined);
-  const backgroundReady = !activeBackground || readyBackgrounds.has(activeBackground);
+  const backgroundReady = (!activeBackground || readyBackgrounds.has(activeBackground))
+    && (!beat?.graduationPortrait || readyBackgrounds.has(GRADUATION_PORTRAIT_SRC));
   useEffect(()=>{
     if(screen==='locked'||screen==='training')void preloadActionDrawings().catch(()=>{});
   },[screen]);
@@ -723,6 +729,7 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
   return (
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass} ${beat.actionPose ? 'filming-scene' : ''}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
+      {backgroundReady && beat.graduationPortrait && <img className="graduation-portrait" src={GRADUATION_PORTRAIT_SRC} width={1386} height={2080} alt={language === 'en' ? 'Lin in her graduation gown, holding her diploma' : '林身穿学士服，手持毕业证书'} draggable={false} decoding="async" />}
       {backgroundReady && beat.actionPose && <CharacterCanvas face={lockedFace} hair={avatar} look="qipao" actionPose={beat.actionPose} onReady={setActionReady} className="filming-character" label={language === 'en' ? 'Lin performing Night Orchid' : '林正在拍摄《夜兰》'} />}
       {beat.filmSuccess && <aside className="film-success-card" role="status"><p>{language === 'en' ? 'FILM SUCCESS' : '电影大获成功'}</p><h2>NIGHT ORCHID</h2><strong>2×</strong><span>{language === 'en' ? 'OPENING WEEKEND FORECAST' : '首周末票房 · 预测的两倍'}</span><b>FAME +5</b><small>{language === 'en' ? 'SEQUEL TALKS UNDERWAY' : '续集洽谈启动'}</small></aside>}
       {backgroundReady && !isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
