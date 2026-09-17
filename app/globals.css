@@ -853,7 +853,8 @@ button { font: inherit; }
 .training-panel > * { flex-shrink:0; }
 .training-screen .training-copy, .training-screen .training-tokens { width:100%; margin:0; }
 .training-screen .training-copy > span { font-size:var(--choice-label); line-height:1.4; letter-spacing:.12em; }
-.training-screen .training-copy h2 { margin:1cqh 0 1.5cqh; font-size:clamp(38px,4.6cqw,118px); line-height:1.05; letter-spacing:-.04em; }
+.training-screen .training-copy h2 { margin:1cqh 0 2cqh; font-size:clamp(38px,4.2cqw,108px); line-height:1.12; letter-spacing:-.035em; text-wrap:balance; }
+.training-heading-line { display:block; }
 .training-screen .training-copy p { max-width:none; font-size:clamp(18px,1.35cqw,34px); line-height:1.5; }
 .training-screen .training-tokens { gap:1.2cqh; }
 .training-screen .training-tokens button { grid-template-columns:clamp(44px,3.6cqw,88px) minmax(0,1fr); column-gap:1cqw; row-gap:.5cqh; min-height:clamp(102px,10cqh,160px); padding:1cqw 6cqw 1cqw 1cqw; border:1px solid #6f8092; }
@@ -870,7 +871,9 @@ button { font: inherit; }
   .creator-screen .creator-controls { min-height:0; padding:2.4cqh 2cqw; overflow-y:auto; overscroll-behavior:contain; }
   .training-screen.stage-screen { display:flex; align-items:center; height:100cqh; min-height:0; padding:max(96px,9cqh) 4cqw 3cqh; overflow:hidden; }
   .training-panel { width:65%; max-height:100%; padding:1cqh .5cqw; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
-  .training-screen .training-character { right:3cqw; bottom:0; height:83cqh; opacity:1; filter:none; }
+  /* Keep the entire existing model inside the stage, including the hem.
+     Explicit dimensions prevent inherited dialogue crops and negative offsets. */
+  .training-screen .training-character { right:4cqw; bottom:5cqh; height:76cqh; width:30.4cqh; max-height:calc(100cqh - 120px); object-fit:contain; opacity:1; filter:none; transform:none; }
 }
 @media (max-width:1000px) and (min-width:641px) {
   .creator-screen .creator-card { grid-template-columns:38% 62%; }
@@ -882,6 +885,7 @@ button { font: inherit; }
 }
 @media (max-width:640px) {
   .training-panel { width:100%; }
+  .training-screen .training-character { position:relative; inset:auto; display:block; height:60cqh; width:24cqh; margin:24px auto 0; opacity:1; filter:none; transform:none; }
   .creator-screen .creator-controls { overflow:visible; }
   .creator-screen .feature-options-3 { grid-template-columns:1fr; }
   .creator-screen .look-grid { grid-template-columns:1fr; }

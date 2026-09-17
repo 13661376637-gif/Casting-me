@@ -10,6 +10,8 @@
 
 ## 本轮决定
 
+- 训练页标题英文按完整短句分为 The fight test / moved to Friday.，避免 Friday 孤行；只调整该页标题行距和人物取景。训练角色等比缩至 76cqh，底部保留 5cqh，不沿用对话负偏移；窄屏角色放回文档流，不裁切或遮挡选项。人物数据、其他场景与剧情不变。
+
 - 修复片场停在 Preparing the set：生产日志证实动态 JSON 属性导入请求 `/_next/static/chunks/avatar-action.json` 返回 404。通过静态导入 JSON 的 `.mjs` 包装模块进行动态分包，必须验证正式构建生成实际动作 JS 分包并打入归档。加载等待最多 20 秒；失败显示原地重试，不推进剧情、不清除捏脸/数值。动作人物绘制完成后才解锁继续，每个姿势独立就绪。
 
 - 封面改为常规黑裙女主主视觉，使用现有 `CharacterCanvas` 完整模型，左右分列标题/角色，不另生成或拼接人像。`lib/cast.ts` 统一配角显示姓名与身份，对话姓名条和经纪人卡使用同一来源：Richard Cole（Director）、David Chen（Agent）、Claire Bennett（Agent）、Maya Park（Actress）；语音消息后缀保留，剧情 ID/对白/数值不改。

@@ -873,7 +873,7 @@ function TrainingScreen({ language, avatar, lockedLook, lockedFace, done, setDon
   return (
     <section className="training-screen stage-screen">
       <div className="training-panel">
-      <div className="training-copy"><span>CHOICE 07 · SINGLE TRAINING SLOT</span><h2>{language === 'en' ? 'The fight test moved to Friday.' : '动作测试提前到了周五。'}</h2><p>{language === 'en' ? '“This film won’t delay because you understand the character better.” Training changes skills, not Fame or Pressure.' : '“这部电影不会因为你更理解角色而延期。”训练改变技能，不改变 Fame 或 Pressure。'}</p></div>
+      <div className="training-copy"><span>CHOICE 07 · SINGLE TRAINING SLOT</span><h2>{language === 'en' ? <><span className="training-heading-line">The fight test</span>{' '}<span className="training-heading-line">moved to Friday.</span></> : '动作测试提前到了周五。'}</h2><p>{language === 'en' ? '“This film won’t delay because you understand the character better.” Training changes skills, not Fame or Pressure.' : '“这部电影不会因为你更理解角色而延期。”训练改变技能，不改变 Fame 或 Pressure。'}</p></div>
       <div className="training-tokens">
         {tokens.map((token, index) => <button key={token.id} onClick={() => click(token.id)} className={done.includes(token.id) ? 'done' : ''}><span>0{index + 1}</span><b>{language === 'en' ? token.label : token.zh}</b><small>{done.includes(token.id) ? token.result : language === 'en' ? token.detailEn : token.detailZh}</small>{token.id === 'martial' && <em>PRESET</em>}</button>)}
       </div>
