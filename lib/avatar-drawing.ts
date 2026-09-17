@@ -223,6 +223,20 @@ function graduationCap(): PaintPath[] {
   ];
 }
 
+// Local costume boundaries, measured in the action model's coordinates. The
+// film's waves stay in place; only its source face/ears/neck are retired. These
+// patches never reach either hand, the sword, the scabbard, or the red collar.
+const actionFaceRig:Record<ActionPose,{erase:string;neck:string}>={
+  crossed:{
+    erase:'M232 70L274 70L291 99L307 122L305 154L282 185L274 195L231 211L217 178L199 156L183 151L180 136L201 120L222 95Z',
+    neck:'M217 166L276 166L275 191L260 198L242 208L236 216L232 226L230 224L229 211L221 203Z',
+  },
+  guard:{
+    erase:'M232 68L274 68L291 98L308 122L305 152L282 181L274 191L231 207L215 169L199 150L183 144L180 132L201 117L222 93Z',
+    neck:'M216 160L276 160L275 181L261 187L247 194L239 201L234 211L231 220L229 217L227 202L219 196Z',
+  },
+};
+
 function actionDrawing(face:FaceSelections,pose:ActionPose):CharacterDrawing {
   if(!actions)throw new Error('Preload action contours before drawing.');
   const action=actions[pose];
@@ -230,29 +244,29 @@ function actionDrawing(face:FaceSelections,pose:ActionPose):CharacterDrawing {
   const headScale=(action.chin[1]-action.eyes[1])/333*action.scale/.245;
   const chin={x:256,y:action.chin[1]*action.scale+action.offset[1]};
   const headY=chin.y-216*headScale;
-  // The film costume includes long waves. Its native face contours respond to
-  // the same saved controls; the complete source neck remains in one rig.
-  const field=(x:number,y:number,cx:number,cy:number,rx:number,ry:number)=>Math.max(0,1-((x-cx)/rx)**2-((y-cy)/ry)**2)**2;
+  const headX=chin.x-HEAD_LOCAL_X*headScale;
+  // Use the actual editor face, not a second face with approximately mapped
+  // slider values. Pose-specific measurements only place that shared geometry.
+  const traced=referenceHead(face,'original').map(path=>bakeHeadPath(path,headScale,headX,headY));
   const shapes:PaintPath[]=action.shapes.map(shape=>{
     const rgb=shape.rgb.map((c,i)=>shape.skin?Math.round(Math.min(255,c*(1-tone)+c*(face.skin==='deep'?[.73,.65,.58][i]:[236/247,223/216,208/177][i])*tone)):c);
-    let d=shape.d;
-    d=d.replace(coordinatePattern,(_,cmd,px,py)=>{
-      const faceScale=(action.chin[1]-action.eyes[1])/83;
-      let x=637+((Number(px)-action.offset[0])/action.scale-action.eyes[0])/faceScale;
-      let y=475+((Number(py)-action.offset[1])/action.scale-action.eyes[1])/faceScale;
-      const eyes=field(x,y,604,476,30,24)+field(x,y,678,476,30,24);
-      y+=featureValue(face,'eyes')*(479-y)*.4*eyes;
-      const nose=field(x,y,643,508,25,28);x+=(x-643)*featureValue(face,'nose')*.23*nose;
-      const cheek=field(x,y,593,511,25,27)+field(x,y,690,511,25,27);
-      x+=Math.sign(x-643)*featureValue(face,'cheekbones')*3*cheek;y-=featureValue(face,'cheekbones')*3*cheek;
-      x+=Math.sign(x-643)*featureValue(face,'jaw')*4*field(x,y,643,536,67,23);
-      x=action.eyes[0]+(x-637)*faceScale;y=action.eyes[1]+(y-475)*faceScale;
-      return `${cmd}${fixedCoordinate(x*action.scale+action.offset[0])} ${fixedCoordinate(y*action.scale+action.offset[1])}`;
-    });
     const fill=`rgb(${rgb.join(',')})`;
-    return {d,fill,stroke:fill,width:.3,group:shape.skin?'action-skin':'action-costume'};
+    return {d:shape.d,fill,stroke:fill,width:.3,group:shape.skin?'action-skin':'action-costume'};
   });
-  return {paths:shapes,head:{x:256,y:132*headScale+headY},headScale,actionPose:pose};
+  const rig=actionFaceRig[pose];
+  shapes.push(
+    ...action.shapes.filter(shape=>shape.skin).map(shape=>({d:shape.d,fill:'#222220',stroke:'#222220',width:.4,group:'action-face-underlay',clip:rig.erase})),
+    // The film source's left ear sits outside the shared face's ear. Remove
+    // its old ink edge too, instead of leaving two ear silhouettes visible.
+    {d:pose==='crossed'?'M182 141C184 137 190 134 197 133L204 151C196 156 187 152 182 141Z':'M182 133C184 129 190 127 197 126L204 144C196 149 187 144 182 133Z',fill:'#242423',stroke:'none',width:0,group:'action-face-underlay'},
+    {d:rig.neck,fill:mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',tone),stroke:'none',width:0,group:'neck'},
+    // Keep the shared painted neck tones but not the source portrait's outer
+    // neck ink: this costume has its own asymmetric collar boundary.
+    ...traced.filter(path=>path.group==='reference-neck'&&Number(path.fill.match(/^rgb\((\d+)/)?.[1]??255)>80).map(path=>({...path,group:'neck',clip:rig.neck})),
+    ...traced.filter(path=>path.group==='face'),
+    ...traced.filter(path=>path.group==='jewelry'),
+  );
+  return {paths:shapes,head:{x:chin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale,actionPose:pose};
 }
 
 export function buildCharacterDrawing({face,hair,look,graduation=false,actionPose}:CharacterDrawingOptions):CharacterDrawing{
