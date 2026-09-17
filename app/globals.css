@@ -894,6 +894,40 @@ button { font: inherit; }
   .training-screen .training-tokens button em { position:static; grid-column:2; justify-self:start; transform:none; }
 }
 
+/* Protagonist-led cover; keep one editable model and give the title its own
+   column so no face, name or start control is hidden under the illustration. */
+.title-screen .title-protagonist {
+  position:absolute;
+  z-index:5;
+  right:9cqw;
+  bottom:1.5cqh;
+  height:calc(100cqh - 108px);
+  width:auto;
+  max-width:none;
+  aspect-ratio:512 / 1280;
+  pointer-events:none;
+}
+.title-screen .title-copy { left:6cqw; top:53%; width:48cqw; transform:translateY(-50%); }
+.title-screen .title-copy h1 { font-size:clamp(72px,9cqw,220px); }
+.title-screen .title-premise { max-width:90%; }
+.speaker-tag { font-size:clamp(14px,1.1cqw,20px); line-height:1.35; letter-spacing:.025em; white-space:normal; overflow-wrap:anywhere; }
+.agent-name b { line-height:1.25; letter-spacing:.015em; }
+.agent-name .cast-role { display:inline-block; font-size:clamp(14px,1.25cqw,21px); white-space:nowrap; }
+@media (max-width:900px) {
+  .title-screen .title-copy { left:4cqw; width:56cqw; }
+  .title-screen .title-protagonist { right:3cqw; }
+}
+@media (max-width:640px) {
+  .title-screen .title-copy { left:4cqw; top:calc(50% + 32px); width:59cqw; }
+  .title-screen .title-copy h1 { font-size:clamp(36px,9cqw,64px); }
+  .title-screen .title-copy > p:first-child,.title-screen .title-copy > small { display:none; }
+  .title-screen .title-zh { margin-top:14px!important; font-size:16px!important; }
+  .title-screen .title-premise { max-width:100%; margin:12px 0; padding:8px; font-size:14px; line-height:1.4; }
+  .title-screen .play-button { min-height:44px; height:auto; padding:8px 12px; font-size:14px; white-space:normal; }
+  .title-screen .title-protagonist { right:2cqw; height:calc(100cqh - 84px); }
+  .speaker-tag { padding:7px 12px; font-size:14px; }
+}
+
 /* User-approved intact graduation artwork, isolated from editable avatars.
    Intrinsic aspect ratio and one transform preserve head/body registration. */
 .dialogue-scene > .graduation-portrait {

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CharacterCanvas } from '@/components/character-canvas';
+import { SUPPORTING_CAST, formatSpeakerLabel } from '@/lib/cast';
 import { preloadActionDrawings } from '@/lib/avatar-drawing';
 import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance } from '@/lib/avatar-model';
 import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as FeatureKey, FaceSelections, CharacterAppearance } from '@/lib/avatar-model';
@@ -153,10 +154,10 @@ const sprites: Record<SpriteKey, { src: string; name: string; frontCrop?: boolea
   linDragonBack: { src: '', name: 'Lin — Night Orchid look, rear pose' },
   linTraining: { src: '', name: 'Lin — Night Orchid fight training' },
   linPorcelain: { src: '', name: 'Lin — Porcelain Light look' },
-  richard: { src: '/characters/richard.png', name: 'Richard Cole' },
-  david: { src: '/characters/david.png', name: 'David Miller' },
-  claire: { src: '/characters/claire.png', name: 'Claire Bennett' },
-  maya: { src: '/characters/maya.png', name: 'Maya Park' },
+  richard: { src: '/characters/richard.png', name: formatSpeakerLabel('RICHARD', '', 'en') },
+  david: { src: '/characters/david.png', name: formatSpeakerLabel('DAVID', '', 'en') },
+  claire: { src: '/characters/claire.png', name: formatSpeakerLabel('CLAIRE', '', 'en') },
+  maya: { src: '/characters/maya.png', name: formatSpeakerLabel('MAYA', '', 'en') },
 };
 
 const avatarOptions: Record<AvatarKey, { hairEn: string; hairZh: string; faceEn: string; faceZh: string }> = {
@@ -547,8 +548,7 @@ function TitleScreen({ language, avatar, onStart }: { language: Language; avatar
   return (
     <section className="title-screen">
       <div className="title-rays" aria-hidden="true" />
-      <Sprite sprite="richard" avatar={avatar} position="left title-left" />
-      <Sprite sprite="maya" avatar={avatar} position="right title-right" />
+      <CharacterCanvas hair={avatar} look="natural" className="title-protagonist" label={language === 'en' ? 'Lin, the protagonist' : '女主角 · 林'} />
       <div className="title-copy">
         <p>2D SPRITE DIALOGUE · LIGHT CAREER SIM</p>
         <h1>CASTING<br /><span>ME</span></h1>
@@ -747,7 +747,7 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
           : <ChoicePanel set={beat.choice} language={language} ready={choiceReady} notice={choiceNotice} onChoice={onChoice} />
       ) : (
         <div className="dialogue-shell">
-          <span className="speaker-tag">{language === 'en' ? beat.speakerEn : beat.speakerZh}</span>
+          <span className="speaker-tag">{formatSpeakerLabel(beat.speakerEn, beat.speakerZh, language)}</span>
           <button className="dialogue-box" onClick={onAdvance} disabled={Boolean(beat.actionPose)&&(!backgroundReady||!actionReady)} aria-label="Continue dialogue">
             <span className="dialogue-text">{beat.actionPose&&(!backgroundReady||!actionReady)?(language==='en'?'Preparing the set…':'片场准备中……'):(language === 'en' ? beat.en : beat.zh)}</span>
             <span className="dialogue-next"><ChevronRight /></span>
@@ -776,8 +776,8 @@ function ChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSe
 
 function AgentChoicePanel({ set, language, ready, notice, onChoice }: { set: ChoiceSet; language: Language; ready: boolean; notice: string; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const agents = [
-    { id: 'a', tone: 'david', number: '01', src: sprites.david.src, nameEn: 'DAVID CHEN', nameZh: '大卫', focusEn: 'ROLE RANGE', focusZh: '角色宽度', traitEn: 'CULTURAL UNDERSTANDING · HIGH', traitZh: '文化理解 · 高', paceEn: 'MARKET SPEED · STEADY', paceZh: '市场速度 · 稳健', fame: 0, pressure: 0 },
-    { id: 'b', tone: 'claire', number: '02', src: sprites.claire.src, nameEn: 'CLAIRE BENNETT', nameZh: '克莱尔', focusEn: 'MARKET ACCESS', focusZh: '市场入口', traitEn: 'MARKET ACCESS · STRONG', traitZh: '市场资源 · 强', paceEn: 'REVISION RATE · HIGH', paceZh: '形象调整率 · 高', fame: 2, pressure: 2 },
+    { id: 'a', tone: 'david', number: '01', src: sprites.david.src, ...SUPPORTING_CAST.DAVID, focusEn: 'ROLE RANGE', focusZh: '角色宽度', traitEn: 'CULTURAL UNDERSTANDING · HIGH', traitZh: '文化理解 · 高', paceEn: 'MARKET SPEED · STEADY', paceZh: '市场速度 · 稳健', fame: 0, pressure: 0 },
+    { id: 'b', tone: 'claire', number: '02', src: sprites.claire.src, ...SUPPORTING_CAST.CLAIRE, focusEn: 'MARKET ACCESS', focusZh: '市场入口', traitEn: 'MARKET ACCESS · STRONG', traitZh: '市场资源 · 强', paceEn: 'REVISION RATE · HIGH', paceZh: '形象调整率 · 高', fame: 2, pressure: 2 },
   ];
 
   return (
@@ -798,7 +798,7 @@ function AgentChoicePanel({ set, language, ready, notice, onChoice }: { set: Cho
               aria-label={language === 'en' ? choice.en : choice.zh}
             >
               <span className="agent-number">AGENT FILE {agent.number}</span>
-              <span className="agent-name"><b>{language === 'en' ? agent.nameEn : agent.nameZh}</b><em>{language === 'en' ? agent.nameZh : agent.nameEn}</em></span>
+              <span className="agent-name"><b>{language === 'en' ? agent.nameEn : agent.nameZh} <span className="cast-role">{language === 'en' ? `(${agent.roleEn})` : `（${agent.roleZh}）`}</span></b><em>{language === 'en' ? agent.nameZh : agent.nameEn}</em></span>
               <span className="agent-portrait"><img src={agent.src} alt={language === 'en' ? agent.nameEn : agent.nameZh} /></span>
               <span className="agent-focus">{language === 'en' ? agent.focusEn : agent.focusZh}</span>
               <span className="agent-traits"><b>{language === 'en' ? agent.traitEn : agent.traitZh}</b><b>{language === 'en' ? agent.paceEn : agent.paceZh}</b></span>
