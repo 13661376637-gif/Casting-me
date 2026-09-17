@@ -114,6 +114,15 @@ for (const look of Object.keys(LOOK_HAIR)) {
   }
 }
 writeFileSync(join(output, 'wardrobe-combinations.png'), sheet.toBuffer('image/png'));
+// The old qipao reference stopped before the feet. Verify actual lower-leg
+// contours and render the whole rebuilt model, not just CSS container bounds.
+assert.ok(bodies.qipao.completion, 'Full-length qipao reference provenance');
+const fullQipao=createCanvas(512,1280);
+paintCharacter(fullQipao.getContext('2d'),buildCharacterDrawing({face:natural,hair:'original',look:'qipao'}),512,1280,false,Path2D);
+const lower=fullQipao.getContext('2d').getImageData(0,1160,512,120).data;
+assert.ok(lower.some((v,i)=>i%4===3&&v>200),'Visible shoes below the original hem');
+for(let x=0;x<512;x++)assert.equal(lower[(119*512+x)*4+3],0,'Feet must not touch the canvas bottom');
+writeFileSync(join(output,'qipao-full-length.png'),fullQipao.toBuffer('image/png'));
 const portraits = createCanvas(1500, 620);
 const pg = portraits.getContext('2d'); pg.fillStyle = '#c9d1d6'; pg.fillRect(0, 0, 1500, 620);
 for (const [index, face] of [natural, coded, muted].entries()) {

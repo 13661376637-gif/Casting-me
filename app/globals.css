@@ -932,8 +932,9 @@ button { font: inherit; }
   position:absolute;
   z-index:5;
   left:50%;
-  top:max(160px,12cqh);
-  height:min(114cqh,1800px);
+  top:auto;
+  bottom:8cqh;
+  height:76cqh;
   width:auto;
   max-width:none;
   aspect-ratio:1386 / 2080;

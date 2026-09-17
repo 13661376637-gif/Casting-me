@@ -59,7 +59,7 @@ type Beat = {
 };
 
 // The user approved this complete supplied portrait for the pre-customization
-// graduation beat only. Never substitute it for the editable in-game character.
+// graduation through the rest of the prologue, before initial-look confirmation.
 const GRADUATION_PORTRAIT_SRC = '/characters/lin-graduation-reference-v41.png';
 const BACKGROUND_ASSETS = [
   '/backgrounds/university-campus.png',
@@ -408,7 +408,12 @@ export default function Home() {
   const lockedFace = appearance?.face ?? null;
 
   const beats = sequences[screen];
-  const beat = beats?.[beatIndex];
+  const sourceBeat = beats?.[beatIndex];
+  const beat = sourceBeat ? {...sourceBeat} : undefined;
+  if(beat && screen==='prologue' && beatIndex>=1){
+    beat.center=undefined;
+    beat.graduationPortrait=true;
+  }
   const sceneBackground = getSceneBackground(screen, beatIndex);
   const activeBackground = sceneBackground
     ?? (screen === 'profile' ? '/backgrounds/university-campus.png' : undefined)

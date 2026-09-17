@@ -33,7 +33,8 @@ const faces=createCanvas(1200,640),facesContext=faces.getContext('2d');facesCont
 for(const [i,pose] of ['crossed','guard'].entries()){
   const drawing=buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'qipao',actionPose:pose});drawings.push(drawing);
   sameFace(buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'natural'}),drawing);
-  assert.deepEqual(drawing.paths.slice(0,actions[pose].shapes.length).map(p=>p.d),actions[pose].shapes.map(p=>p.d),'Body, hands, blade, hilt and scabbard are not warped');
+  assert.deepEqual(drawing.paths.filter(p=>p.group==='action-skin'||p.group==='action-costume').map(p=>p.d),actions[pose].shapes.map(p=>p.d),'Body, hands, blade, hilt and scabbard are not warped');
+  assert.ok(!drawing.paths.some(p=>p.group==='action-face-underlay'),'No painted patches over the old face');
   const sprite=createCanvas(700,1000);paintCharacter(sprite.getContext('2d'),drawing,700,1000,false,Path2D);ctx.drawImage(sprite,i*700,0);
   const edited=buildCharacterDrawing({face:{...DEFAULT_FACE,skin:'deep',jaw:'long-square'},hair:'original',look:'qipao',actionPose:pose});
   assert.deepEqual(drawing.head,edited.head);
