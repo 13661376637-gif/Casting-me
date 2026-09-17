@@ -13,17 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'CASTING ME / 选角中的我',
-  description: '一款关于好莱坞东亚女性类型化的两分钟 2D 立绘对话游戏 Demo。',
+  title: 'CASTING ME',
+  description: 'A two-minute visual novel about an East Asian actress navigating typecasting in Hollywood.',
   openGraph: {
-    title: 'CASTING ME / 选角中的我',
-    description: '被看见，也可能意味着被固定。',
+    title: 'CASTING ME',
+    description: 'Being seen can also mean being typecast.',
     images: ['/og.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CASTING ME / 选角中的我',
-    description: '被看见，也可能意味着被固定。',
+    title: 'CASTING ME',
+    description: 'Being seen can also mean being typecast.',
     images: ['/og.png'],
   },
 };
@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
