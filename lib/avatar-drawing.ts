@@ -6,7 +6,20 @@ let actions:Record<ActionPose,ActionReference>|null=null;
 let actionLoad:Promise<void>|null=null;
 export function preloadActionDrawings():Promise<void> {
   if(actions)return Promise.resolve();
-  return actionLoad??=import('./avatar-action.json',{with:{type:'json'}}).then(module=>{actions=module.default;}).catch(error=>{actionLoad=null;throw error;});
+  if(actionLoad)return actionLoad;
+  let timeout:ReturnType<typeof setTimeout>;
+  const pending=Promise.race([
+    import('./avatar-action-data.mjs').then(module=>{
+      const data=module.default;
+      for(const pose of ['crossed','guard'] as const){
+        if(!data[pose]?.shapes?.length)throw new Error(`Missing action pose: ${pose}`);
+      }
+      actions=data;
+    }),
+    new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(new Error('Action loading timed out')),20000);}),
+  ]).finally(()=>{clearTimeout(timeout);if(actionLoad===pending)actionLoad=null;});
+  actionLoad=pending;
+  return pending;
 }
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.

@@ -711,6 +711,9 @@ function ProfileScreen({ language, avatar, fame, pressure, backgroundReady, onCo
 
 function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, total, background, backgroundReady, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; language: Language; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; backgroundReady: boolean; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
   const [actionReady,setActionReady]=useState(false);
+  const [actionFailed,setActionFailed]=useState(false);
+  const [actionAttempt,setActionAttempt]=useState(0);
+  const retryAction=()=>{setActionReady(false);setActionFailed(false);setActionAttempt(attempt=>attempt+1);};
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -730,7 +733,7 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass} ${beat.actionPose ? 'filming-scene' : ''}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
       {backgroundReady && beat.graduationPortrait && <img className="graduation-portrait" src={GRADUATION_PORTRAIT_SRC} width={1386} height={2080} alt={language === 'en' ? 'Lin in her graduation gown, holding her diploma' : '林身穿学士服，手持毕业证书'} draggable={false} decoding="async" />}
-      {backgroundReady && beat.actionPose && <CharacterCanvas face={lockedFace} hair={avatar} look="qipao" actionPose={beat.actionPose} onReady={setActionReady} className="filming-character" label={language === 'en' ? 'Lin performing Night Orchid' : '林正在拍摄《夜兰》'} />}
+      {backgroundReady && beat.actionPose && <CharacterCanvas key={`${beat.actionPose}-${actionAttempt}`} face={lockedFace} hair={avatar} look="qipao" actionPose={beat.actionPose} onReady={setActionReady} onLoadError={setActionFailed} className="filming-character" label={language === 'en' ? 'Lin performing Night Orchid' : '林正在拍摄《夜兰》'} />}
       {beat.filmSuccess && <aside className="film-success-card" role="status"><p>{language === 'en' ? 'FILM SUCCESS' : '电影大获成功'}</p><h2>NIGHT ORCHID</h2><strong>2×</strong><span>{language === 'en' ? 'OPENING WEEKEND FORECAST' : '首周末票房 · 预测的两倍'}</span><b>FAME +5</b><small>{language === 'en' ? 'SEQUEL TALKS UNDERWAY' : '续集洽谈启动'}</small></aside>}
       {backgroundReady && !isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
       {backgroundReady && !isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
@@ -748,8 +751,8 @@ function DialogueScene({ beat, language, avatar, lockedLook, lockedFace, index, 
       ) : (
         <div className="dialogue-shell">
           <span className="speaker-tag">{formatSpeakerLabel(beat.speakerEn, beat.speakerZh, language)}</span>
-          <button className="dialogue-box" onClick={onAdvance} disabled={Boolean(beat.actionPose)&&(!backgroundReady||!actionReady)} aria-label="Continue dialogue">
-            <span className="dialogue-text">{beat.actionPose&&(!backgroundReady||!actionReady)?(language==='en'?'Preparing the set…':'片场准备中……'):(language === 'en' ? beat.en : beat.zh)}</span>
+          <button className="dialogue-box" onClick={beat.actionPose&&actionFailed?retryAction:onAdvance} disabled={Boolean(beat.actionPose)&&!actionFailed&&(!backgroundReady||!actionReady)} aria-label={beat.actionPose&&actionFailed?'Retry character loading':'Continue dialogue'}>
+            <span className="dialogue-text" aria-live="polite">{beat.actionPose&&actionFailed?(language==='en'?'Character could not load. Click to retry — your choices are safe.':'人物加载失败，点击重试。已选形象和进度会保留。'):beat.actionPose&&(!backgroundReady||!actionReady)?(language==='en'?'Preparing the set…':'片场准备中……'):(language === 'en' ? beat.en : beat.zh)}</span>
             <span className="dialogue-next"><ChevronRight /></span>
           </button>
         </div>

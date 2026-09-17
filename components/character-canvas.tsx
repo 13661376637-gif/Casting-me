@@ -18,6 +18,7 @@ type Props = {
   graduation?: boolean;
   actionPose?: ActionPose;
   onReady?: (ready:boolean) => void;
+  onLoadError?: (failed:boolean) => void;
   activeTool?: FaceFeature;
   onAdjust?: (feature: FaceFeature, value: number) => void;
 };
@@ -63,7 +64,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
   );
 }
 
-export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, actionPose, onReady, activeTool, onAdjust }: Props) {
+export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, actionPose, onReady, onLoadError, activeTool, onAdjust }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toolCursorRef = useRef<HTMLSpanElement>(null);
   const dragRef = useRef<{ id: number; x: number; value: number; lastValue: number; width: number; feature: FaceFeature } | null>(null);
@@ -74,15 +75,21 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
   const adjustFrameRef = useRef<number | null>(null);
   const queuedAdjustRef = useRef<{ feature: FaceFeature; value: number } | null>(null);
   const selection = face ?? DEFAULT_FACE;
+  const readinessRef=useRef({onReady,onLoadError});
+  useLayoutEffect(()=>{readinessRef.current={onReady,onLoadError};},[onReady,onLoadError]);
   const [actionReady,setActionReady]=useState(false);
   useEffect(()=>{
     if(!actionPose)return;
     let active=true;
-    preloadActionDrawings().then(()=>{if(active)setActionReady(true);}).catch(()=>{if(active)setActionReady(false);});
+    setActionReady(false);
+    readinessRef.current.onReady?.(false);
+    readinessRef.current.onLoadError?.(false);
+    preloadActionDrawings().then(()=>{if(active)setActionReady(true);}).catch(()=>{
+      if(active){setActionReady(false);readinessRef.current.onLoadError?.(true);}
+    });
     return ()=>{active=false;};
   },[actionPose]);
   const drawing = useMemo(() => actionPose&&!actionReady?null:buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation, actionPose }), [selection, hair, look, graduation, actionPose,actionReady]);
-  useEffect(()=>{onReady?.(Boolean(drawing));},[drawing,onReady]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -100,7 +107,14 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
       const context = canvas.getContext('2d');
       if (!context) return;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      paintCharacter(context, nextDrawing, rect.width, rect.height, portraitRef.current);
+      try {
+        paintCharacter(context, nextDrawing, rect.width, rect.height, portraitRef.current);
+        readinessRef.current.onLoadError?.(false);
+        readinessRef.current.onReady?.(true);
+      } catch {
+        readinessRef.current.onReady?.(false);
+        readinessRef.current.onLoadError?.(true);
+      }
     };
     redrawRef.current = redraw;
     redraw();

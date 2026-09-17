@@ -10,6 +10,8 @@
 
 ## 本轮决定
 
+- 修复片场停在 Preparing the set：生产日志证实动态 JSON 属性导入请求 `/_next/static/chunks/avatar-action.json` 返回 404。通过静态导入 JSON 的 `.mjs` 包装模块进行动态分包，必须验证正式构建生成实际动作 JS 分包并打入归档。加载等待最多 20 秒；失败显示原地重试，不推进剧情、不清除捏脸/数值。动作人物绘制完成后才解锁继续，每个姿势独立就绪。
+
 - 封面改为常规黑裙女主主视觉，使用现有 `CharacterCanvas` 完整模型，左右分列标题/角色，不另生成或拼接人像。`lib/cast.ts` 统一配角显示姓名与身份，对话姓名条和经纪人卡使用同一来源：Richard Cole（Director）、David Chen（Agent）、Claire Bennett（Agent）、Maya Park（Actress）；语音消息后缀保留，剧情 ID/对白/数值不改。
 
 - 用户最新明确允许“学士服不行就直接插入”：仅序章第二镜头恢复学士服，直接使用其完整透明原图 `public/characters/lin-graduation-reference-v41.png`（1386×2080），不重采样、不描摹、不拆分头身。与校园背景一起预加载后显示；使用独立等比样式，不进入 `Sprite`/可编辑画板链路。毕业发生在捏脸之前，后续正常角色、武打和结局仍完全使用保存的捏脸数据。此项是用户授权的局部原图例外，不得扩展为其他主角场景恢复 PNG。
