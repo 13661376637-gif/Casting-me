@@ -4,7 +4,7 @@ import {mkdirSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {buildCharacterDrawing,paintCharacter,preloadActionDrawings} from '../lib/avatar-drawing.ts';
 import {DEFAULT_FACE,adjustFace} from '../lib/avatar-model.ts';
-import actions from '../lib/avatar-action.json' with {type:'json'};
+import actions from '../lib/avatar-action-data.mjs';
 const {createCanvas,Path2D}=createRequire(join(process.argv[2],'package.json'))('@napi-rs/canvas');
 await preloadActionDrawings();
 mkdirSync('work/action-verification',{recursive:true});
@@ -33,7 +33,8 @@ const faces=createCanvas(1200,640),facesContext=faces.getContext('2d');facesCont
 for(const [i,pose] of ['crossed','guard'].entries()){
   const drawing=buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'qipao',actionPose:pose});drawings.push(drawing);
   sameFace(buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'natural'}),drawing);
-  assert.deepEqual(drawing.paths.filter(p=>p.group==='action-skin'||p.group==='action-costume').map(p=>p.d),actions[pose].shapes.map(p=>p.d),'Body, hands, blade, hilt and scabbard are not warped');
+  assert.deepEqual(drawing.paths.slice(0,actions[pose].shapes.length).map(p=>p.d),actions[pose].shapes.map(p=>p.d),'Complete new body is painted without transformed pieces');
+  assert.ok(drawing.paths.every(p=>!p.clip),'No face aperture or patch mask in the full-body drawing');
   assert.ok(!drawing.paths.some(p=>p.group==='action-face-underlay'),'No painted patches over the old face');
   const sprite=createCanvas(700,1000);paintCharacter(sprite.getContext('2d'),drawing,700,1000,false,Path2D);ctx.drawImage(sprite,i*700,0);
   const edited=buildCharacterDrawing({face:{...DEFAULT_FACE,skin:'deep',jaw:'long-square'},hair:'original',look:'qipao',actionPose:pose});
@@ -70,4 +71,4 @@ for(const [row,face] of variants.entries())for(const [column,actionPose] of [und
   compareContext.fillStyle='#182332';compareContext.font='18px sans-serif';compareContext.fillText(`${actionPose??'Editor / normal'} · ${row===3?'43% controls':face.skin}`,column*400+12,row*360+26);
 }
 writeFileSync('work/action-verification/identity.png',compare.toBuffer('image/png'));
-console.log('Both action poses match actual editor face geometry/colors, including continuous edits; fixed anchors and unchanged weapon/body paths verified.');
+console.log('Both complete Canvas poses match editor facial controls, including continuous edits; fixed anchors, intact bounds and zero patch masks verified.');
