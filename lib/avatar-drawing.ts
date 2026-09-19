@@ -1,7 +1,7 @@
 import type { AvatarHair, AvatarLook, FaceSelections } from './avatar-model';
 import reference from './avatar-reference.json' with { type: 'json' };
 import bodies from './avatar-bodies.json' with { type: 'json' };
-type ActionReference = {scale:number;offset:number[];chin:number[];eyes:number[];shapes:{d:string;rgb:number[];skin:boolean}[]};
+type ActionReference = {scale:number;offset:number[];chin:number[];eyes:number[];preparedHead?:boolean;headOpening?:string;foreHair?:{d:string;rgb:number[]}[];shapes:{d:string;rgb:number[];skin:boolean}[]};
 let actions:Record<ActionPose,ActionReference>|null=null;
 let actionLoad:Promise<void>|null=null;
 export function preloadActionDrawings():Promise<void> {
@@ -12,7 +12,7 @@ export function preloadActionDrawings():Promise<void> {
     import('./avatar-action-data.mjs').then(module=>{
       const data=module.default;
       for(const pose of ['crossed','guard'] as const){
-        if(!data[pose]?.shapes?.length)throw new Error(`Missing action pose: ${pose}`);
+        if(!data[pose]?.shapes?.length||!data[pose]?.preparedHead)throw new Error(`Missing integrated action pose: ${pose}`);
       }
       actions=data;
     }),
@@ -24,7 +24,7 @@ export function preloadActionDrawings():Promise<void> {
 
 // One coordinate system for every pose, hairstyle, facial feature and garment.
 // No raster image is loaded, clipped or painted by the protagonist renderer.
-export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string; clip?: string };
+export type PaintPath = { d: string; fill: string; stroke: string; width: number; group: string; clip?: string; skinMaterial?:boolean };
 export type ActionPose = 'crossed' | 'guard';
 export type CharacterDrawing = { paths: PaintPath[]; head: { x: number; y: number }; headScale:number; actionPose?:ActionPose };
 export type CharacterDrawingOptions = { face: FaceSelections; hair: AvatarHair; look: AvatarLook; graduation?: boolean; actionPose?:ActionPose };
@@ -102,7 +102,7 @@ function referenceHead(face: FaceSelections, hair: AvatarHair): PaintPath[] {
   paths.push({d:contourPath([scalp.map(v=>v/grid)],0),fill:mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',tone),stroke:'none',width:0,group:'scalp-base'});
   for(const shape of reference.silhouettes){
     const fill=shape.group===1||shape.group===4?'#222220':shape.group===3?'#b8b5ad':mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',tone);
-    paths.push({d:contourPath(shape.loops,shape.group),fill,stroke:'none',width:0,group:groupNames[shape.group]});
+    paths.push({d:contourPath(shape.loops,shape.group),fill,stroke:'none',width:0,group:groupNames[shape.group],skinMaterial:shape.group===0||shape.group===2});
   }
   const orderedContours=[...reference.contours].sort((a,b)=>reference.palette[b.color].reduce((n,c)=>n+c,0)-reference.palette[a.color].reduce((n,c)=>n+c,0));
   for(const contour of orderedContours){
@@ -111,7 +111,7 @@ function referenceHead(face: FaceSelections, hair: AvatarHair): PaintPath[] {
     const target=face.skin==='deep'?source.map((c,i)=>Math.max(0,Math.round(c*[0.73,0.65,0.58][i]))):reference.palePalette[contour.color];
     const rgb=isSkin?source.map((c,i)=>Math.round(c*(1-tone)+target[i]*tone)):source;
     const fill=`rgb(${rgb.join(',')})`;
-    paths.push({d:contourPath(contour.loops,contour.group),fill,stroke:fill,width:contour.group===1||contour.group===4?0.28:0.1,group:groupNames[contour.group]});
+    paths.push({d:contourPath(contour.loops,contour.group),fill,stroke:fill,width:contour.group===1||contour.group===4?0.28:0.1,group:groupNames[contour.group],skinMaterial:isSkin});
   }
   referenceCache.set(key,paths);
   if(referenceCache.size>3)referenceCache.delete(referenceCache.keys().next().value!);
@@ -245,40 +245,35 @@ function actionDrawing(face:FaceSelections,pose:ActionPose):CharacterDrawing {
   const chin={x:256,y:action.chin[1]*action.scale+action.offset[1]};
   const headY=chin.y-216*headScale;
   const headX=chin.x-HEAD_LOCAL_X*headScale;
-  // Use the actual editor face, not a second face with approximately mapped
-  // slider values. Pose-specific measurements only place that shared geometry.
-  const traced=referenceHead(face,'original').map(path=>{
-    // Shape the back hair as part of the film rig, continuing its swept waves
-    // around the ears; the editable face itself is never stretched or covered.
-    const shaped=path.group==='hair-back'?{...path,d:path.d.replace(coordinatePattern,(_,c,x,y)=>{
-      const amount=Math.max(0,1-Math.abs(Number(y)-164)/95);
-      return `${c}${fixedCoordinate(Number(x)+(Number(x)-HEAD_LOCAL_X)*.36*amount)} ${y}`;
-    })}:path;
-    return bakeHeadPath(shaped,headScale,headX,headY);
-  });
+  // Same editable facial vertices; one crown, then continuous film-length
+  // locks. The daily hairstyle's blunt back panel is deliberately not reused.
+  const traced=referenceHead(face,'original').map(path=>bakeHeadPath(path,headScale,headX,headY));
   const rig=actionFaceRig[pose];
-  // Remove the complete source head at the drawing boundary. Rebuild one
-  // continuous scalp/face/hair/neck rig, with no painted face or ear patches.
-  const clip='M-500 -500L1100 -500L1100 1500L-500 1500Z'+[...rig.cut].reverse().map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join('')+'Z';
+  if(!action.preparedHead)throw new Error('Action contours require the integrated head mesh.');
   const shapes:PaintPath[]=action.shapes.map(shape=>{
     const rgb=shape.rgb.map((c,i)=>shape.skin?Math.round(Math.min(255,c*(1-tone)+c*(face.skin==='deep'?[.73,.65,.58][i]:[236/247,223/216,208/177][i])*tone)):c);
     const fill=`rgb(${rgb.join(',')})`;
-    return {d:shape.d,fill,stroke:fill,width:.3,group:shape.skin?'action-skin':'action-costume',clip};
+    return {d:shape.d,fill,stroke:fill,width:.3,group:shape.skin?'action-skin':'action-costume'};
   });
   const paths:PaintPath[]=[
+    // A closed hair interior joins the actual film curls behind the ears.
+    // All external hair contours stay continuous with the original full pose.
+    {d:action.headOpening!,fill:'#252523',stroke:'none',width:0,group:'action-hair'},
     ...shapes,
-    // Closed native hair silhouette underneath the strand contours and ears;
-    // this is part of the rebuilt head, not an overlay on facial features.
-    {d:'M194 218L186 198L181 170L179 143L183 127L195 106L214 77L234 57L253 51L271 57L291 77L306 107L312 133L314 162L311 191L304 219L280 225L257 211L232 221L210 228Z',fill:'#222220',stroke:'none',width:0,group:'hair-back',clip:rig.cut.map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join('')+'Z'},
-    ...traced.filter(path=>path.group==='hair-back'),
     {d:rig.neck,fill:mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',tone),stroke:'none',width:0,group:'neck'},
     // Keep the shared painted neck tones but not the source portrait's outer
     // neck ink: this costume has its own asymmetric collar boundary.
     ...traced.filter(path=>path.group==='reference-neck'&&Number(path.fill.match(/^rgb\((\d+)/)?.[1]??255)>80).map(path=>({...path,group:'neck',clip:rig.neck})),
-    ...traced.filter(path=>path.group==='scalp-base'),
-    ...traced.filter(path=>path.group==='face'),
+    ...traced.filter(path=>path.group==='face').map(path=>{
+      // The portrait trace contains a tiny dark hairline annotation above the
+      // forehead. It belongs to the daily hairstyle, not the actor's features.
+      const rgb=path.fill.match(/\d+/g)?.map(Number)??[255];
+      return !path.skinMaterial&&Math.max(...rgb)<190?{...path,clip:'M130 99L345 99L345 240L130 240Z'}:path;
+    }),
+    ...(action.foreHair??[]).map(path=>({d:path.d,fill:`rgb(${path.rgb.join(',')})`,stroke:'none',width:0,group:'action-hair-front'})),
+    {d:'M224 72C238 66 252 69 259 74C270 69 282 77 289 86L295 103C286 88 279 85 272 84C265 82 262 83 257 86C251 83 245 84 238 87C230 90 222 97 212 108L214 91Z',fill:'#242423',stroke:'none',width:0,group:'action-hair-front'},
+    {d:'M222 89C236 71 249 74 257 82M242 73C248 74 253 77 256 82M264 75C276 77 283 86 289 94',fill:'none',stroke:'#35342f',width:.65,group:'action-hair-front'},
     ...traced.filter(path=>path.group==='jewelry'),
-    ...traced.filter(path=>path.group==='hair-front'),
   ];
   return {paths,head:{x:chin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale,actionPose:pose};
 }

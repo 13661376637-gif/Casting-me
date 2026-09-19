@@ -17,7 +17,7 @@ function harness(loadModule){
     loadModule,callback=>{deadline=callback;return 1;},()=>{deadline=undefined;});
   return {preload,expire:()=>deadline()};
 }
-const valid={default:{crossed:{shapes:[{}]},guard:{shapes:[{}]}}};
+const valid={default:{crossed:{shapes:[{}],preparedHead:true},guard:{shapes:[{}],preparedHead:true}}};
 let resolve, calls=0;
 const shared=harness(()=>{calls++;return new Promise(done=>{resolve=done;});});
 const first=shared.preload();assert.equal(shared.preload(),first);
@@ -26,7 +26,9 @@ let attempts=0;
 const retry=harness(()=>++attempts===1?Promise.reject(new Error('network')):Promise.resolve(valid));
 await assert.rejects(retry.preload(),/network/);await retry.preload();assert.equal(attempts,2);
 const invalid=harness(()=>Promise.resolve({default:{}}));
-await assert.rejects(invalid.preload(),/Missing action pose/);
+await assert.rejects(invalid.preload(),/Missing integrated action pose/);
+const stale=harness(()=>Promise.resolve({default:{crossed:{shapes:[{}]},guard:{shapes:[{}]}}}));
+await assert.rejects(stale.preload(),/Missing integrated action pose/);
 const slow=harness(()=>new Promise(done=>{resolve=done;}));
 const waiting=slow.preload();const rejected=assert.rejects(waiting,/timed out/);
 slow.expire();await rejected;resolve(valid);await Promise.resolve();await slow.preload();

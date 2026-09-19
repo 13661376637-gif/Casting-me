@@ -34,6 +34,11 @@ for(const [i,pose] of ['crossed','guard'].entries()){
   const drawing=buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'qipao',actionPose:pose});drawings.push(drawing);
   sameFace(buildCharacterDrawing({face:DEFAULT_FACE,hair:'original',look:'natural'}),drawing);
   assert.deepEqual(drawing.paths.filter(p=>p.group==='action-skin'||p.group==='action-costume').map(p=>p.d),actions[pose].shapes.map(p=>p.d),'Body, hands, blade, hilt and scabbard are not warped');
+  assert.equal(actions[pose].preparedHead,true,'Retired head removed from mesh offline');
+  assert.ok(!drawing.paths.filter(p=>p.group==='action-skin'||p.group==='action-costume').some(p=>p.clip),'No runtime face cutout on the figure');
+  assert.equal(drawing.paths.filter(p=>p.group==='hair-back').length,0,'No blunt portrait hair panel');
+  assert.equal(drawing.paths.filter(p=>p.group==='hair-front').length,0,'Film crown must not be stacked with the daily crown');
+  assert.ok(drawing.paths.some(p=>p.group==='action-hair-front'),'Film fringe contours must be present');
   assert.ok(!drawing.paths.some(p=>p.group==='action-face-underlay'),'No painted patches over the old face');
   const sprite=createCanvas(700,1000);paintCharacter(sprite.getContext('2d'),drawing,700,1000,false,Path2D);ctx.drawImage(sprite,i*700,0);
   const edited=buildCharacterDrawing({face:{...DEFAULT_FACE,skin:'deep',jaw:'long-square'},hair:'original',look:'qipao',actionPose:pose});
@@ -49,6 +54,7 @@ for(const [i,pose] of ['crossed','guard'].entries()){
     const face={...DEFAULT_FACE,skin,eyes:j?'coded':'natural',cheekbones:j?'high':'soft',nose:j?'rounded':'defined',jaw:j?'long-square':'oval'};
     const variant=buildCharacterDrawing({face,hair:'original',look:'qipao',actionPose:pose});
     sameFace(buildCharacterDrawing({face,hair:'original',look:'natural'}),variant);
+    assert.ok(!variant.paths.some(p=>p.group==='face'&&p.skinMaterial&&p.clip),'Ink cleanup must never clip darker skin');
     const portrait=createCanvas(400,320);paintCharacter(portrait.getContext('2d'),variant,400,320,true,Path2D);facesContext.drawImage(portrait,j*400,i*320);
     assert.deepEqual(variant.paths.filter(p=>p.group==='action-costume').map(p=>p.fill),drawing.paths.filter(p=>p.group==='action-costume').map(p=>p.fill),'Costume and gold embroidery must not be recolored');
   }
