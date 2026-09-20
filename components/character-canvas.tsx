@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { buildCharacterDrawing, paintCharacter, preloadActionDrawings } from '@/lib/avatar-drawing';
-import type { ActionPose } from '@/lib/avatar-drawing';
+import { buildCharacterDrawing, paintCharacter } from '@/lib/avatar-drawing';
 import { DEFAULT_FACE, featureAmount, LOOK_HAIR } from '@/lib/avatar-model';
 import type { AvatarHair, AvatarLook, FaceFeature, FaceSelections } from '@/lib/avatar-model';
 
@@ -16,7 +15,6 @@ type Props = {
   portrait?: boolean;
   decorative?: boolean;
   graduation?: boolean;
-  actionPose?: ActionPose;
   onReady?: (ready:boolean) => void;
   onLoadError?: (failed:boolean) => void;
   activeTool?: FaceFeature;
@@ -64,7 +62,7 @@ function FaceToolCursor({ feature }: { feature: FaceFeature }) {
   );
 }
 
-export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, actionPose, onReady, onLoadError, activeTool, onAdjust }: Props) {
+export function CharacterCanvas({ look = 'natural', hair, face = null, className = '', label = 'Lin', portrait = false, decorative = false, graduation = false, onReady, onLoadError, activeTool, onAdjust }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toolCursorRef = useRef<HTMLSpanElement>(null);
   const dragRef = useRef<{ id: number; x: number; value: number; lastValue: number; width: number; feature: FaceFeature } | null>(null);
@@ -77,19 +75,9 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
   const selection = face ?? DEFAULT_FACE;
   const readinessRef=useRef({onReady,onLoadError});
   useLayoutEffect(()=>{readinessRef.current={onReady,onLoadError};},[onReady,onLoadError]);
-  const [actionReady,setActionReady]=useState(false);
-  useEffect(()=>{
-    if(!actionPose)return;
-    let active=true;
-    setActionReady(false);
-    readinessRef.current.onReady?.(false);
-    readinessRef.current.onLoadError?.(false);
-    preloadActionDrawings().then(()=>{if(active)setActionReady(true);}).catch(()=>{
-      if(active){setActionReady(false);readinessRef.current.onLoadError?.(true);}
-    });
-    return ()=>{active=false;};
-  },[actionPose]);
-  const drawing = useMemo(() => actionPose&&!actionReady?null:buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation, actionPose }), [selection, hair, look, graduation, actionPose,actionReady]);
+  // Martial-action artwork is rendered only by ActionCharacter as one image.
+  // This editable renderer remains exclusively for the ordinary character.
+  const drawing = useMemo(() => buildCharacterDrawing({ face: selection, hair: hair ?? LOOK_HAIR[look], look, graduation }), [selection, hair, look, graduation]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

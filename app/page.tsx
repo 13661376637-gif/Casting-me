@@ -23,8 +23,10 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CharacterCanvas } from '@/components/character-canvas';
+import { ActionCharacter } from '@/components/action-character';
 import { SUPPORTING_CAST, formatSpeakerLabel } from '@/lib/cast';
-import { preloadActionDrawings } from '@/lib/avatar-drawing';
+import { preloadActionSprites } from '@/lib/action-sprites';
+import type { ActionSpritePose } from '@/lib/action-sprites';
 import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance } from '@/lib/avatar-model';
 import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as FeatureKey, FaceSelections, CharacterAppearance } from '@/lib/avatar-model';
 
@@ -421,7 +423,7 @@ export default function Home() {
   const backgroundReady = (!activeBackground || readyBackgrounds.has(activeBackground))
     && (!beat?.graduationPortrait || readyBackgrounds.has(GRADUATION_PORTRAIT_SRC));
   useEffect(()=>{
-    if(screen==='locked'||screen==='training')void preloadActionDrawings().catch(()=>{});
+    if(screen==='locked'||screen==='training')void preloadActionSprites().catch(()=>{});
   },[screen]);
 
   useEffect(() => {
@@ -702,10 +704,12 @@ function ProfileScreen({ avatar, fame, pressure, backgroundReady, onConfirm }: {
 }
 
 function DialogueScene({ beat, avatar, lockedLook, lockedFace, index, total, background, backgroundReady, choiceReady, choiceNotice, onAdvance, onChoice }: { beat: Beat; avatar: AvatarKey; lockedLook: LookKey | null; lockedFace: FaceSelections | null; index: number; total: number; background?: string; backgroundReady: boolean; choiceReady: boolean; choiceNotice: string; onAdvance: () => void; onChoice: (choice: Choice, set: ChoiceSet) => void }) {
-  const [actionReady,setActionReady]=useState(false);
-  const [actionFailed,setActionFailed]=useState(false);
+  const [readyActionPose,setReadyActionPose]=useState<ActionSpritePose | null>(null);
+  const [failedActionPose,setFailedActionPose]=useState<ActionSpritePose | null>(null);
+  const actionReady=Boolean(beat.actionPose && readyActionPose===beat.actionPose);
+  const actionFailed=Boolean(beat.actionPose && failedActionPose===beat.actionPose);
   const [actionAttempt,setActionAttempt]=useState(0);
-  const retryAction=()=>{setActionReady(false);setActionFailed(false);setActionAttempt(attempt=>attempt+1);};
+  const retryAction=()=>{setReadyActionPose(null);setFailedActionPose(null);setActionAttempt(attempt=>attempt+1);};
   const isScriptChoice = beat.choice?.id === 'choice-06';
   const isAgentChoice = beat.choice?.id === 'choice-02';
   const isFullScreenChoice = isScriptChoice || isAgentChoice;
@@ -725,7 +729,7 @@ function DialogueScene({ beat, avatar, lockedLook, lockedFace, index, total, bac
     <section className={`dialogue-scene ${background ? 'has-background' : ''} ${sceneClass} ${beat.actionPose ? 'filming-scene' : ''}`} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="set-dressing"><span>{beat.tag || stageInfoFromBeat(beat)}</span><i>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</i></div>
       {backgroundReady && beat.graduationPortrait && <img className="graduation-portrait" src={GRADUATION_PORTRAIT_SRC} width={1386} height={2080} alt={'Lin in her graduation gown, holding her diploma'} draggable={false} decoding="async" />}
-      {backgroundReady && beat.actionPose && <CharacterCanvas key={`${beat.actionPose}-${actionAttempt}`} face={lockedFace} hair={avatar} look="qipao" actionPose={beat.actionPose} onReady={setActionReady} onLoadError={setActionFailed} className="filming-character" label={'Lin performing Night Orchid'} />}
+      {backgroundReady && beat.actionPose && <ActionCharacter key={`${beat.actionPose}-${actionAttempt}`} pose={beat.actionPose} onReady={setReadyActionPose} onLoadError={setFailedActionPose} />}
       {beat.filmSuccess && <aside className="film-success-card" role="status"><p>{'FILM SUCCESS'}</p><h2>NIGHT ORCHID</h2><strong>2×</strong><span>{'OPENING WEEKEND FORECAST'}</span><b>FAME +5</b><small>{'SEQUEL TALKS UNDERWAY'}</small></aside>}
       {backgroundReady && !isFullScreenChoice && beat.left && <Sprite sprite={beat.left} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="left" />}
       {backgroundReady && !isFullScreenChoice && beat.center && <Sprite sprite={beat.center} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} position="center" />}
