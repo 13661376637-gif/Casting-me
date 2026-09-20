@@ -495,9 +495,9 @@ button { font: inherit; }
   z-index:2;
   display:grid;
   justify-items:center;
-  width:min(520px,74cqw);
+  width:min(660px,78cqw);
   margin:0 0 22px;
-  padding:10px 54px 9px;
+  padding:11px 70px 10px;
   color:#1d2838;
   border:3px solid #1d2838;
   outline:2px solid #f5e8c7;
@@ -509,7 +509,7 @@ button { font: inherit; }
 .script-choice-heading::before,.script-choice-heading::after { content:""; position:absolute; top:50%; width:34px; height:2px; background:#1d2838; }
 .script-choice-heading::before { left:14px; }
 .script-choice-heading::after { right:14px; }
-.script-choice-heading span { font-size:clamp(24px,3cqw,42px); font-weight:950; line-height:1; letter-spacing:.08em; }
+.script-choice-heading span { font-size:clamp(22px,2.35cqw,34px); font-weight:950; line-height:1; letter-spacing:.075em; white-space:nowrap; }
 .script-choice-grid {
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
