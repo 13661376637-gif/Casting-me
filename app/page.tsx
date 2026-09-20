@@ -24,13 +24,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { CharacterCanvas } from '@/components/character-canvas';
 import { ActionCharacter } from '@/components/action-character';
+import { AuditionFailureScene } from '@/components/audition-failure-scene';
+import { AUDITION_FAILURE_BEATS, preloadAuditionFailure } from '@/lib/audition-failure';
 import { SUPPORTING_CAST, formatSpeakerLabel } from '@/lib/cast';
 import { preloadActionSprites } from '@/lib/action-sprites';
 import type { ActionSpritePose } from '@/lib/action-sprites';
 import { DEFAULT_FACE, adjustFace, applyFaceOption, lockAppearance } from '@/lib/avatar-model';
 import type { AvatarHair as AvatarKey, AvatarLook as LookKey, FaceFeature as FeatureKey, FaceSelections, CharacterAppearance } from '@/lib/avatar-model';
 
-type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'lookTest' | 'training' | 'callback' | 'locked' | 'filming' | 'redCarpet' | 'ending';
+type Screen = 'title' | 'creator' | 'prologue' | 'profile' | 'firstRead' | 'auditionFailed' | 'lookTest' | 'training' | 'callback' | 'locked' | 'filming' | 'redCarpet' | 'ending';
 type SpriteKey = 'linNatural' | 'linDragon' | 'linDragonBack' | 'linTraining' | 'linPorcelain' | 'richard' | 'david' | 'claire' | 'maya';
 
 type FaceOption = {
@@ -355,8 +357,8 @@ const redCarpet: Beat[] = [
   { speakerEn: 'REPORTER 2', en: "Don't move! Hold that!", center: 'linDragon', right: 'maya', flash: true },
 ];
 
-const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, lookTest, callback, locked, filming, redCarpet };
-const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', filming:'redCarpet', redCarpet: 'ending' };
+const sequences: Partial<Record<Screen, Beat[]>> = { prologue, firstRead, auditionFailed: AUDITION_FAILURE_BEATS, lookTest, callback, locked, filming, redCarpet };
+const screenNext: Partial<Record<Screen, Screen>> = { prologue: 'profile', firstRead: 'auditionFailed', auditionFailed: 'lookTest', lookTest: 'creator', callback: 'locked', locked: 'training', filming:'redCarpet', redCarpet: 'ending' };
 
 function getSceneBackground(screen: Screen, beatIndex: number) {
   if (screen === 'prologue') return beatIndex < 3 ? '/backgrounds/university-campus.png' : '/backgrounds/audition-room.png';
@@ -372,6 +374,7 @@ function getSceneBackground(screen: Screen, beatIndex: number) {
 const stageInfo: Record<Screen, { index: string; label: string }> = {
   title: { index: '00', label: 'CASTING ME' }, creator: { index: '02B', label: 'FACE EDITOR' }, prologue: { index: '00', label: 'PROLOGUE' }, profile: { index: '00', label: 'PROFILE SETUP' },
   firstRead: { index: '01', label: 'DOWNFALL' }, lookTest: { index: '02A', label: 'CHOOSE AN AGENT' }, training: { index: '04B', label: 'TRAINING TRADE-OFF' },
+  auditionFailed: { index: '01B', label: 'AUDITION FAILED' },
   filming: { index:'04C', label:'NIGHT ORCHID / ON SET' },
   callback: { index: '02C–03', label: 'DINNER / REFRAME' }, locked: { index: '04A', label: 'THREE SCRIPTS' }, redCarpet: { index: '04C–D', label: 'SUCCESS / RED CARPET' }, ending: { index: 'END', label: 'SUCCESS REGISTERED' },
 };
@@ -425,6 +428,9 @@ export default function Home() {
   useEffect(()=>{
     if(screen==='locked'||screen==='training')void preloadActionSprites().catch(()=>{});
   },[screen]);
+  useEffect(() => {
+    if (screen === 'profile' || screen === 'firstRead') void preloadAuditionFailure().catch(() => {});
+  }, [screen]);
 
   useEffect(() => {
     if (screen !== 'filming' || !beat?.filmSuccess || filmRewarded.current) return;
@@ -450,7 +456,7 @@ export default function Home() {
   }, [beatIndex, beat?.flash, soundOn]);
 
   const progress = useMemo(() => {
-    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'lookTest', 'creator', 'callback', 'locked', 'training', 'filming', 'redCarpet', 'ending'];
+    const order: Screen[] = ['prologue', 'profile', 'firstRead', 'auditionFailed', 'lookTest', 'creator', 'callback', 'locked', 'training', 'filming', 'redCarpet', 'ending'];
     return Math.max(0, Math.round(((order.indexOf(screen) + 1) / order.length) * 100));
   }, [screen]);
 
@@ -520,7 +526,9 @@ export default function Home() {
       {screen === 'profile' && <ProfileScreen avatar={avatar} fame={fame} pressure={pressure} backgroundReady={backgroundReady} onConfirm={() => moveTo('firstRead')} />}
       {screen === 'training' && <TrainingScreen avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} done={trainingDone} setDone={setTrainingDone} soundOn={soundOn} onContinue={completeTraining} />}
       {screen === 'ending' && <EndingScreen avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} fame={fame} pressure={pressure} backgroundReady={backgroundReady} onRestart={restart} />}
-      {beat && <DialogueScene beat={beat} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} backgroundReady={backgroundReady} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />}
+      {beat && (screen === 'auditionFailed'
+        ? <AuditionFailureScene beat={beat} index={beatIndex} total={beats?.length ?? 1} onAdvance={advance} />
+        : <DialogueScene beat={beat} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} backgroundReady={backgroundReady} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />)}
     </main>
   );
 }
