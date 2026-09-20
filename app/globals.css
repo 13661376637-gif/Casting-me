@@ -243,7 +243,7 @@ button { font: inherit; }
 /* V14 interactive face lab */
 .creator-card { height:min(760px,calc(100cqh - 104px)); min-height:630px; }
 .creator-controls { overflow-y:auto; scrollbar-width:thin; scrollbar-color:#a8325d #d8d2df; }
-.creator-look { position:absolute; left:50%; bottom:-6%; height:94%; max-width:none; transform:translateX(-50%); filter:drop-shadow(9px 12px 8px rgba(18,27,38,.28)); animation:sprite-in .24s ease both; }
+.creator-look { position:absolute; left:50%; bottom:2%; height:94%; max-width:none; transform:translateX(-50%); filter:drop-shadow(9px 12px 8px rgba(18,27,38,.28)); animation:sprite-in .24s ease both; }
 .bias-rule { margin-bottom:11px; border-color:#a8325d; background:#eed7df; }
 .bias-rule span { background:#a8325d; }
 .face-tool-hotspots { position:absolute; inset:0; z-index:6; pointer-events:none; }
@@ -720,7 +720,7 @@ button { font: inherit; }
   .creator-step-2 .creator-preview { min-height:420px; }
   .creator-avatar { height:96%; bottom:-18%; }
   .creator-qipao { height:112%; bottom:-20%; }
-  .creator-look { height:106%; bottom:-17%; }
+  .creator-look { height:92%; bottom:2%; }
   .creator-readout { right:10px; bottom:10px; }
   .creator-controls { padding:22px 18px 26px; }
   .creator-controls h2 { font-size:43px; }
