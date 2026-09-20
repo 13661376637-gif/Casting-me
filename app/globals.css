@@ -43,16 +43,16 @@
 
 * { box-sizing: border-box; }
 html, body { width:100%; min-height:100%; height:100%; }
-body { display:grid; place-items:center; margin:0; overflow:hidden; background:#151c29; color:var(--foreground); font-family:var(--font-game); }
+body { display:grid; place-items:start center; min-width:1600px; min-height:1000px; margin:0; overflow:auto; background:#151c29; color:var(--foreground); font-family:var(--font-game); }
 button { font: inherit; }
 
 .vn-app {
   position: relative;
-  width:min(100vw,160svh);
-  height:min(100svh,62.5vw);
+  width:1600px;
+  height:1000px;
   min-height:0;
   aspect-ratio:16 / 10;
-  overflow: hidden;
+  overflow: clip;
   isolation: isolate;
   container-type:size;
   background: linear-gradient(180deg, #d9d3e6 0%, #b9c9cf 54%, #657d80 100%);
@@ -343,7 +343,7 @@ button { font: inherit; }
 }
 
 /* Dialogue scenes */
-.dialogue-scene { position:relative; min-height:100cqh; overflow:hidden; padding-top:72px; }
+.dialogue-scene { position:relative; min-height:100cqh; overflow:clip; padding-top:72px; }
 .dialogue-scene.has-background { background-position:center; background-size:cover; background-repeat:no-repeat; }
 .filming-scene { --action-bottom:max(196px,16cqh); --action-height:calc(100cqh - var(--action-bottom) - max(140px,12cqh)); }
 .filming-character { position:absolute; z-index:5; height:var(--action-height); width:calc(var(--action-height) * .75); left:50%; bottom:var(--action-bottom); transform:translateX(-50%); object-fit:contain; object-position:center bottom; pointer-events:none; user-select:none; }
@@ -369,7 +369,7 @@ button { font: inherit; }
 
 /* Fullscreen presentation for the two setup interfaces. Their logical canvases
    keep the original proportions while the complete UI scales as one unit. */
-@media (min-width: 641px) {
+@container (min-width: 641px) {
   .creator-screen.stage-screen,
   .profile-screen.stage-screen {
     display:grid;
@@ -656,7 +656,7 @@ button { font: inherit; }
 .restart-button { border:2px solid #17202d; border-radius:0; background:#ed5c90; box-shadow:3px 3px 0 #17202d; font-weight:900; }
 
 /* Responsive */
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .vn-topbar { grid-template-columns:auto 1fr auto; min-height:64px; }
   .folder-button span, .skip-icon { display:none; }
   .chapter-status { width:min(250px,80%); }
@@ -694,7 +694,7 @@ button { font: inherit; }
   .agent-impact { width:94%; }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .vn-app { min-height:0; }
   .vn-topbar { padding:7px 10px; grid-template-columns:40px 1fr auto; }
   .folder-button svg { width:26px;height:26px; }
@@ -874,7 +874,7 @@ button { font: inherit; }
 .training-screen .training-tokens button em { right:1cqw; font-size:var(--choice-meta); letter-spacing:.03em; }
 .training-screen .training-tokens button.done small { letter-spacing:.025em; }
 .training-screen .continue-button { position:relative; left:auto; bottom:auto; align-self:flex-start; margin-top:1cqh; min-height:clamp(54px,5.8cqh,86px); height:auto; padding:.7cqw 1.4cqw; border:0; box-shadow:none; font-size:var(--choice-action); letter-spacing:.025em; white-space:normal; }
-@media (min-width:641px) {
+@container (min-width:641px) {
   .creator-screen.stage-screen { display:block; width:100%; height:100cqh; min-height:0; padding:max(88px,7.4cqh) 1.2cqw 1.2cqh; }
   .creator-screen .creator-card { grid-template-columns:44% 56%; width:100%; height:100%; min-height:0; margin:0; transform:none; }
   .creator-screen .creator-preview { min-height:0; }
@@ -885,7 +885,7 @@ button { font: inherit; }
      Explicit dimensions prevent inherited dialogue crops and negative offsets. */
   .training-screen .training-character { right:4cqw; bottom:5cqh; height:76cqh; width:30.4cqh; max-height:calc(100cqh - 120px); object-fit:contain; opacity:1; filter:none; transform:none; }
 }
-@media (max-width:1000px) and (min-width:641px) {
+@container (max-width:1000px) and (min-width:641px) {
   .creator-screen .creator-card { grid-template-columns:38% 62%; }
   .creator-screen .feature-options-3 { grid-template-columns:1fr; }
   .creator-screen .look-grid { grid-template-columns:1fr; }
@@ -893,7 +893,7 @@ button { font: inherit; }
   .training-screen .training-tokens button { padding-right:12px; }
   .training-screen .training-tokens button em { position:static; grid-column:2; justify-self:start; transform:none; }
 }
-@media (max-width:640px) {
+@container (max-width:640px) {
   .training-panel { width:100%; }
   .training-screen .training-character { position:relative; inset:auto; display:block; height:60cqh; width:24cqh; margin:24px auto 0; opacity:1; filter:none; transform:none; }
   .creator-screen .creator-controls { overflow:visible; }
@@ -927,11 +927,11 @@ button { font: inherit; }
 .speaker-tag { font-size:clamp(14px,1.1cqw,20px); line-height:1.35; letter-spacing:.025em; white-space:normal; overflow-wrap:anywhere; }
 .agent-name b { line-height:1.25; letter-spacing:.015em; }
 .agent-name .cast-role { display:inline-block; font-size:clamp(14px,1.25cqw,21px); white-space:nowrap; }
-@media (max-width:900px) {
+@container (max-width:900px) {
   .title-screen .title-copy { left:4cqw; width:56cqw; }
   .title-screen .title-protagonist { right:3cqw; }
 }
-@media (max-width:640px) {
+@container (max-width:640px) {
   .title-screen .title-copy { left:4cqw; top:calc(50% + 32px); width:59cqw; }
   .title-screen .title-copy h1 { font-size:clamp(36px,9cqw,64px); }
   .title-screen .title-copy > p:first-child,.title-screen .title-copy > small { display:none; }
@@ -981,7 +981,7 @@ button { font: inherit; }
   bottom:-30cqh;
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .dialogue-scene > .character-sprite {
     height:min(98cqh,900px);
     bottom:-26cqh;
@@ -998,7 +998,7 @@ button { font: inherit; }
   }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .dialogue-scene > .character-sprite {
     height:82cqh;
     bottom:-18cqh;
