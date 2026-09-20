@@ -118,9 +118,7 @@ writeFileSync(join(output, 'wardrobe-combinations.png'), sheet.toBuffer('image/p
 // contours and render the whole rebuilt model, not just CSS container bounds.
 assert.ok(bodies.qipao.completion, 'Full-length qipao reference provenance');
 const fullQipao=createCanvas(512,1280);
-const qipaoDrawing=buildCharacterDrawing({face:natural,hair:'original',look:'qipao'});
-assert.equal(group(qipaoDrawing,'qipao-footwear').length,6,'Both qipao pumps must have closed uppers, openings and sole detail');
-paintCharacter(fullQipao.getContext('2d'),qipaoDrawing,512,1280,false,Path2D);
+paintCharacter(fullQipao.getContext('2d'),buildCharacterDrawing({face:natural,hair:'original',look:'qipao'}),512,1280,false,Path2D);
 const lower=fullQipao.getContext('2d').getImageData(0,1160,512,120).data;
 assert.ok(lower.some((v,i)=>i%4===3&&v>200),'Visible shoes below the original hem');
 for(let x=0;x<512;x++)assert.equal(lower[(119*512+x)*4+3],0,'Feet must not touch the canvas bottom');

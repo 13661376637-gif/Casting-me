@@ -161,25 +161,6 @@ function qipaoGarment(face:FaceSelections):PaintPath[] {
   return referenceBody('qipao',face).map(path=>({...path,clip}));
 }
 
-// The completed qipao trace retains the source photo's very dark footwear,
-// but its right vamp collapses into the heel when the full figure is reduced
-// for the look and training screens. Paint both pumps as closed foreground
-// silhouettes so the toe, opening, sole and heel remain legible at game size.
-// These paths stay in the shared 512 × 1280 model space; they are not a CSS
-// patch or a second character layer.
-function qipaoFootwear(face:FaceSelections):PaintPath[] {
-  const skin=mix('#f7d8b1',face.skin==='deep'?'#b48c67':'#ecdfd0',featureValue(face,'skin'));
-  const ink='#0b0d11', shoe='#17191d', highlight='#34373d';
-  return [
-    {d:'M151 1229C158 1217 172 1205 190 1195C202 1188 215 1188 226 1193C237 1198 244 1210 249 1225C251 1232 246 1238 237 1242C225 1248 207 1250 181 1248C162 1248 151 1243 149 1237C148 1234 149 1231 151 1229Z',fill:shoe,stroke:ink,width:2.2,group:'qipao-footwear'},
-    {d:'M178 1211C186 1201 199 1193 213 1193C224 1193 233 1200 237 1210C228 1219 216 1224 202 1225C190 1225 181 1220 178 1211Z',fill:skin,stroke:ink,width:1.35,group:'qipao-footwear',skinMaterial:true},
-    {d:'M159 1239C182 1244 219 1243 242 1233M166 1232C183 1228 202 1226 221 1228',fill:'none',stroke:highlight,width:1.15,group:'qipao-footwear'},
-    {d:'M277 1204C281 1194 288 1186 298 1184C309 1183 320 1188 330 1198L343 1210C352 1214 358 1221 359 1228C360 1236 352 1242 340 1246C325 1250 305 1251 286 1248C274 1247 267 1242 268 1235C269 1227 273 1216 277 1204Z',fill:shoe,stroke:ink,width:2.2,group:'qipao-footwear'},
-    {d:'M286 1201C292 1191 302 1187 311 1190C320 1192 328 1200 337 1211C329 1220 317 1225 303 1225C292 1225 284 1219 283 1212C283 1208 284 1204 286 1201Z',fill:skin,stroke:ink,width:1.35,group:'qipao-footwear',skinMaterial:true},
-    {d:'M276 1238C296 1244 329 1243 351 1233M281 1230C298 1227 318 1227 337 1230',fill:'none',stroke:highlight,width:1.15,group:'qipao-footwear'},
-  ];
-}
-
 // The graduation costume is drawn in the same 512 × 1280 model space as the
 // regular wardrobe. Its front-facing stance, neck anchor, shoulder width and
 // limb lengths therefore match the natural look instead of importing a second
@@ -314,7 +295,7 @@ export function buildCharacterDrawing({face,hair,look,graduation=false,actionPos
     return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};
   }
   const paths:PaintPath[]=[...traced.filter(path=>path.group==='hair-back')];
-  if(look==='qipao')paths.push(...qipaoNeck(traced,face),...qipaoGarment(face),...qipaoFootwear(face));
+  if(look==='qipao')paths.push(...qipaoNeck(traced,face),...qipaoGarment(face));
   else paths.push(...referenceBody(look,face));
   for(const layer of ['scalp-base','face','jewelry','hair-front'])paths.push(...traced.filter(path=>path.group===layer));
   return {paths,head:{x:bodyChin.x,y:HEAD_FOCUS_Y*headScale+headY},headScale};

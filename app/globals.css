@@ -887,6 +887,10 @@ button { font: inherit; }
   /* Keep the entire existing model inside the stage, including the hem.
      Explicit dimensions prevent inherited dialogue crops and negative offsets. */
   .training-screen .training-character { right:4cqw; bottom:5cqh; height:76cqh; width:30.4cqh; max-height:calc(100cqh - 120px); object-fit:contain; opacity:1; filter:none; transform:none; }
+  /* The qipao framing ends on the original hem. Keep the traced shoes intact
+     off-canvas instead of replacing them with a second footwear drawing. */
+  .creator-screen .creator-look[data-look="qipao"] { bottom:-5%; }
+  .training-screen .training-character[data-look="qipao"] { bottom:-4cqh; }
 }
 @container (max-width:1000px) and (min-width:641px) {
   .creator-screen .creator-card { grid-template-columns:38% 62%; }

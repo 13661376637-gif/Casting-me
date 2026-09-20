@@ -167,6 +167,7 @@ export function CharacterCanvas({ look = 'natural', hair, face = null, className
         ref={canvasRef}
         className={`character-canvas ${portrait ? 'portrait-canvas' : 'full-character-canvas'} ${editable ? 'editable-character-canvas' : ''} ${className}`}
         data-face-tool={editable ? activeTool : undefined}
+        data-look={look}
         width={portrait ? 530 : 512}
         height={portrait ? 620 : 1280}
         role={editable ? 'slider' : decorative ? undefined : 'img'}
