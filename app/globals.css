@@ -983,6 +983,9 @@ button { font: inherit; }
   height:min(106cqh,1160px);
   bottom:-30cqh;
 }
+.dialogue-scene.red-carpet-dialogue > .character-sprite.right {
+  right:clamp(24px,5cqw,96px);
+}
 
 @container (max-width: 900px) {
   .dialogue-scene > .character-sprite {
@@ -998,6 +1001,9 @@ button { font: inherit; }
   .dialogue-scene.red-carpet-dialogue > .character-sprite.center {
     height:min(98cqh,900px);
     bottom:-26cqh;
+  }
+  .dialogue-scene.red-carpet-dialogue > .character-sprite.right {
+    right:3cqw;
   }
 }
 
@@ -1015,5 +1021,8 @@ button { font: inherit; }
   .dialogue-scene.red-carpet-dialogue > .character-sprite.center {
     height:82cqh;
     bottom:-18cqh;
+  }
+  .dialogue-scene.red-carpet-dialogue > .character-sprite.right {
+    right:-24cqw;
   }
 }
