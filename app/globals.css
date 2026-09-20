@@ -437,37 +437,17 @@ button { font: inherit; }
 .dialogue-next { display:grid; place-items:center; width:34px; height:34px; color:#1d2838; background:#f5e8c7; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); animation:next-pulse 1s ease infinite; }
 @keyframes next-pulse { 50%{transform:translateX(4px)} }
 
-/* V3: the rejection interlude is a full-stage composition, not a popup.
-   The intact portrait shares one scale; reserve the dialogue area below it. */
+/* V3: match the regular dialogue's head/shoulder scale, centered on the stage.
+   Keep the intact artwork proportional; the stage crops the lower body.
+   The PNG crown/chin/shoulders land at 30.5/44.3/47cqh on the 16:10 stage. */
 .audition-failure-scene { background-color:#172331; }
-.audition-failure-scene.has-background::before { background:linear-gradient(90deg,rgba(18,27,39,.94),rgba(18,27,39,.78) 40%,rgba(18,27,39,.2) 76%); }
-.audition-failure-composition {
-  position:absolute; z-index:4; inset:max(106px,10cqh) 7cqw max(212px,19cqh);
-  display:grid; grid-template-columns:1fr 1fr; gap:3cqw; min-height:0;
+.audition-failure-portrait {
+  position:absolute; z-index:5; left:50%; top:29.5cqh;
+  display:block; width:auto; height:110cqh; max-width:none;
+  transform:translateX(-50%); object-fit:contain;
+  user-select:none; pointer-events:none;
 }
-.audition-result { align-self:center; color:var(--cream); }
-.audition-kicker { margin:0 0 1.6cqh; color:#f48ab0; font-size:clamp(13px,1.15cqw,18px); font-weight:850; letter-spacing:.13em; }
-.audition-result h1 { margin:0; font-size:clamp(32px,5.7cqw,104px); line-height:.98; font-weight:850; letter-spacing:-.035em; }
-.audition-verdict { margin:2cqh 0; color:white; font-size:clamp(19px,2cqw,32px); font-weight:650; }
-.audition-result-note { margin:2.4cqh 0; padding-left:1.5cqw; border-left:3px solid var(--pink); }
-.audition-result-note > span { color:#f48ab0; font-size:clamp(12px,1.05cqw,16px); font-weight:800; letter-spacing:.1em; }
-.audition-result-note > p { margin:.6cqh 0 0; font-size:clamp(17px,1.7cqw,27px); line-height:1.35; }
-.audition-cost { margin:0 0 1.5cqh; font-size:clamp(14px,1.35cqw,22px); line-height:1.5; color:#d8dce2; }
-.audition-page { font-size:clamp(12px,1.05cqw,16px); letter-spacing:.15em; color:#b2c2cc; }
-.audition-portrait-slot { min-width:0; min-height:0; height:100%; }
-.audition-failure-portrait { display:block; width:100%; height:100%; object-fit:contain; object-position:center bottom; user-select:none; pointer-events:none; }
-.audition-failure-scene .dialogue-shell { width:min(1100px,88cqw); }
 .audition-failure-scene .speaker-tag { white-space:normal; }
-@media (max-width:640px) {
-  .audition-failure-composition { inset:94px 12px 240px; grid-template-columns:43% 57%; gap:0; }
-  .audition-kicker { font-size:11px; letter-spacing:.04em; }
-  .audition-result h1 { font-size:clamp(21px,5.6cqw,35px); }
-  .audition-verdict { font-size:16px; }
-  .audition-result-note > p { font-size:14px; }
-  .audition-result-note > span, .audition-page { font-size:11px; }
-  .audition-cost { display:none; }
-  .audition-failure-scene .dialogue-shell { width:calc(100% - 24px); }
-}
 
 /* Choice panel */
 .choice-panel { position:absolute; z-index:24; left:50%; bottom:22px; width:min(880px,calc(100% - 34px)); padding:15px; transform:translateX(-50%); border:3px solid var(--cream); background:rgba(24,34,47,.96); box-shadow:8px 8px 0 rgba(24,34,47,.42); }

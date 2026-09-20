@@ -15,6 +15,14 @@ assert.ok(!/CharacterCanvas|mask-image|clip-path/.test(component), 'Use one inta
 assert.match(component, /disabled=\{status === 'loading'\}/);
 assert.match(component, /status === 'error' \? retry : onAdvance/);
 assert.match(component, /status === 'ready' && <img/);
+assert.doesNotMatch(component, /<article|<h1|audition-result|audition-page|BEFORE REPRESENTATION/, 'Rejection information belongs only in the bottom dialogue');
+assert.match(component, /className="dialogue-shell"/);
+const css = readFileSync('app/globals.css', 'utf8');
+const portraitStyle = css.match(/\.audition-failure-portrait\s*\{([^}]+)\}/)?.[1] ?? '';
+for (const rule of ['left:50%', 'top:29.5cqh', 'height:110cqh', 'width:auto', 'max-width:none', 'translateX(-50%)', 'object-fit:contain']) {
+  assert.ok(portraitStyle.includes(rule), `Keep centered, proportional dialogue framing: ${rule}`);
+}
+assert.doesNotMatch(css, /audition-result|audition-failure-composition|audition-failure-scene \.dialogue-shell/, 'No residual left column or custom dialogue sizing');
 assert.ok(!/\p{Script=Han}/u.test(source + component));
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText.replaceAll('export ', '');
 function harness() {

@@ -20,7 +20,7 @@
 
 - 画板V3 新增 **试镜失败 / AUDITION FAILED**（01B）：`firstRead → auditionFailed → lookTest`，五段对白呈现未被录用、失落、坚持原解读被市场拒绝、为下一次机会接受妥协。沿用英语版，不再次扣除原 choice-01 的名气/压力，不改变经纪人选择或后续剧情数值。
 - 该节在捏脸前，使用以现有常规黑裙女主为参照生成的完整透明失落立绘 `public/characters/lin-audition-failed-v3.png`。1024×1536，约 73.3% 真透明，整身同一张图，不叠头、不拉伸；仅用于此节，不替代任何捏脸后的场景。原图/生成与透明提取提示记录见 `tools/audition-failure-art.md`。
-- `AuditionFailureScene` 等比显示全身并为底部对白留空；`preloadAuditionFailure` 在确认初始形象/首次试镜时预载公寓与立绘，均解码成功再显示。失败或 20 秒超时可原地重试，禁止永久卡住或跳过内容。检查脚本 `tools/verify-audition-failure.mjs`。
+- `AuditionFailureScene` 按用户对话参考改为正中半身取景：完整立绘统一等比放大，头顶约舞台 30.5%、肩线约 47%，下身由舞台自然裁出；不改原画、不拆头身。删除左侧标题、反馈、说明与页码，五段信息仅在原有底部对话框呈现，顶部章节名保留。`preloadAuditionFailure` 在确认初始形象/首次试镜时预载公寓与立绘，均解码成功再显示。失败或 20 秒超时可原地重试，禁止永久卡住或跳过内容。检查脚本 `tools/verify-audition-failure.mjs`。
 
 - 画板V2 完整武打立绘已获得真实 RGBA 透明输出，分别为 `public/characters/lin-action-crossed-v48.png` / `lin-action-guard-v48.png`，1024×1536。内置 imagegen 对整张新立绘去背景，不再贴普通捏脸的头；透明像素分别约 73.0% / 70.2%，画面四边无裁断。主体约 99% 不透明是生成结果本身，未做程序抠图。两姿势只按整张图等比放置，皮肤/手/腿/颈部本来就在一张画中。
 - `CharacterCanvas` 不再暴露 `actionPose`，防止武打再次走到旧共享头部拼接路径；普通捏脸和换装保持不变。`verify-action-sprites.mjs --assets <runtime>` 验证真实透明、清晰度、完整边缘、加载/解码/重试和武打与普通脸渲染隔离。上线前检查实际部署状态，不能把本地已换图误报为线上已更新。
