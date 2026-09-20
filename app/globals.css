@@ -563,8 +563,11 @@ button { font: inherit; }
 .script-folder.lotus { color:#426f73; border-color:#527f80; background:linear-gradient(150deg,#f3e7c8,#e6d7b7); }
 .script-folder.indie { color:#3c4652; border-color:#59606a; background:linear-gradient(150deg,#ddc9a7,#cbb68f); }
 .script-number { align-self:flex-start; padding:4px 7px; color:currentColor; border:1px solid currentColor; font-size:9px; font-weight:950; letter-spacing:.14em; }
-.script-titles { display:grid; justify-items:center; margin:14px 0 8px; }
-.script-titles b { font-size:clamp(27px,3.1cqw,48px); font-weight:950; line-height:1; letter-spacing:.03em; }
+.script-titles { display:grid; justify-items:center; width:100%; min-width:0; margin:14px 0 8px; }
+.script-titles b { display:block; max-width:100%; font-size:clamp(27px,3.1cqw,48px); font-weight:950; line-height:1; letter-spacing:.03em; text-align:center; text-wrap:balance; }
+/* The longest script label uses its own ruler so INDEPENDENT stays inside
+   the folder's inner border at the locked 16:10 fullscreen scale. */
+.script-folder.indie .script-titles b { font-size:clamp(24px,2.55cqw,40px); letter-spacing:.015em; }
 .script-emblem { display:grid; place-items:center; width:clamp(86px,11cqh,126px); aspect-ratio:1; margin:auto 0 12px; border:3px double currentColor; border-radius:50%; }
 .script-emblem svg { width:58%; height:58%; stroke-width:1.35; }
 .script-film { width:88%; padding:8px 5px 6px; border-top:2px solid currentColor; border-bottom:1px solid currentColor; font-size:clamp(12px,1.25cqw,17px); font-weight:950; letter-spacing:.1em; }
