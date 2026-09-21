@@ -345,7 +345,7 @@ button { font: inherit; }
 /* Dialogue scenes */
 .dialogue-scene { position:relative; min-height:100cqh; overflow:clip; padding-top:72px; }
 .dialogue-scene.has-background { background-position:center; background-size:cover; background-repeat:no-repeat; }
-.filming-scene { --action-bottom:max(196px,16cqh); --action-height:calc(100cqh - var(--action-bottom) - max(140px,12cqh)); }
+.filming-scene { --action-bottom:max(132px,11cqh); --action-height:calc(100cqh - var(--action-bottom) - max(76px,7cqh)); }
 .filming-character { position:absolute; z-index:5; height:var(--action-height); width:calc(var(--action-height) * .75); left:50%; bottom:var(--action-bottom); transform:translateX(-50%); object-fit:contain; object-position:center bottom; pointer-events:none; user-select:none; }
 /* Normalize complete assets by crown-to-sole height, never deform body parts. */
 .filming-scene .set-dressing { z-index:7; left:4cqw; top:10cqh; transform:none; align-items:flex-start; }
