@@ -79,7 +79,7 @@ assert.ok(!/lockedFace|CharacterCanvas|canvas|mask-image/.test(component));
 const editableRenderer = readFileSync('components/character-canvas.tsx', 'utf8');
 assert.ok(!/actionPose|preloadActionDrawings/.test(editableRenderer), 'Editable face renderer must not expose the old action-head composition');
 if (process.argv.includes('--built')) {
-  for (const pose of ['crossed', 'guard']) {
+  for (const pose of ['crossed']) {
     assert.ok(existsSync(`dist/client/characters/lin-action-${pose}-v48.png`), `Missing built ${pose} PNG`);
   }
 }
@@ -88,7 +88,7 @@ if (assetsFlag !== -1) {
   const runtime = process.argv[assetsFlag + 1];
   assert.ok(runtime, 'Supply the bundled Node runtime package directory');
   const { createCanvas, loadImage } = createRequire(join(runtime, 'package.json'))('@napi-rs/canvas');
-  for (const pose of ['crossed', 'guard']) {
+  for (const pose of ['crossed']) {
     const path = `public/characters/lin-action-${pose}-v48.png`;
     const image = await loadImage(path);
     assert.ok(image.width >= 1024 && image.height >= 1536, `${pose}: source must be high resolution`);

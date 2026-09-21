@@ -31,9 +31,9 @@ export function ActionCharacter({ pose, onReady, onLoadError }: Props) {
 
   if (decoded !== pose) return null;
   return <img
-    className={`filming-character filming-character-${pose}`}
+    className="filming-character filming-character-crossed"
     src={ACTION_SPRITES[pose]}
-    alt={pose === 'crossed' ? 'Lin holding her sword and scabbard crossed overhead' : 'Lin in an open sword guard'}
+    alt="Lin holding her sword and scabbard crossed overhead"
     draggable={false}
     decoding="async"
     onError={() => { resetActionSprite(pose); onLoadError(pose); }}

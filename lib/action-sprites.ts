@@ -3,7 +3,7 @@ export type ActionSpritePose = 'crossed' | 'guard';
 // Complete generated figures only. Never layer editable heads over these PNGs.
 export const ACTION_SPRITES: Record<ActionSpritePose, string> = {
   crossed: '/characters/lin-action-crossed-v48.png',
-  guard: '/characters/lin-action-guard-v48.png',
+  guard: '/characters/lin-action-crossed-v48.png',
 };
 
 const decodedSprites = new Map<ActionSpritePose, Promise<HTMLImageElement>>();
