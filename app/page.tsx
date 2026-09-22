@@ -511,6 +511,7 @@ export default function Home() {
   };
 
   return (
+    <div className="vn-stage">
     <main className={`vn-app scene-${screen}`}>
       <GameTopbar screen={screen} progress={progress} fame={fame} pressure={pressure} soundOn={soundOn} setSoundOn={setSoundOn} hudPulse={hudPulse} />
 
@@ -523,6 +524,7 @@ export default function Home() {
         ? <AuditionFailureScene beat={beat} index={beatIndex} total={beats?.length ?? 1} onAdvance={advance} />
         : <DialogueScene beat={beat} avatar={avatar} lockedLook={lockedLook} lockedFace={lockedFace} index={beatIndex} total={beats?.length ?? 1} background={sceneBackground} backgroundReady={backgroundReady} choiceReady={choiceReady} choiceNotice={choiceNotice} onAdvance={advance} onChoice={selectChoice} />)}
     </main>
+    </div>
   );
 }
 
