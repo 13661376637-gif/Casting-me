@@ -4,7 +4,6 @@ export const AUDITION_FAILURE_BEATS = [
   { speakerEn: 'CASTING OFFICE', en: 'Thank you for reading. We are not moving forward with your application. No callback is scheduled.' },
   { speakerEn: 'LIN', en: 'I gave her a history. A doubt. A reason to stay. They wanted a type they could sell.' },
   { speakerEn: 'LIN', en: 'I kept the part of her that felt like me. Now there is no role, no callback—and the rent is still due.' },
-  { speakerEn: 'THE COST OF STAYING YOURSELF', en: 'In this version of Hollywood, talent alone does not open the door. Refusing the market’s image has left Lin outside it.' },
   { speakerEn: 'LIN', en: 'If I want another chance, I have to compromise. I’ll meet the agents. Let them change how I’m seen—before I disappear from the list.' },
 ];
 
